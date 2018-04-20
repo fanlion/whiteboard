@@ -7,7 +7,6 @@ export interface Options {
     lineWidth?: number,
     radius?: number,
     shape?: string
-
 }
 
 interface History {
@@ -69,6 +68,8 @@ export class YMPaint {
 
         // 绑定事件
         this.bindEvent();
+        // 设置canvas尺寸为浏览器大小
+        this.resize();
     }
 
     /**
@@ -186,6 +187,12 @@ export class YMPaint {
         this.canvas.addEventListener('mousedown', this.handleMouseDown.bind(this), false);
         this.canvas.addEventListener('mousemove', this.throttle(this.handleMouseMove, 10), false);
         this.canvas.addEventListener('mouseup', this.handleMouseUp.bind(this), false);
+    }
+
+    private resize() {
+        // TODO: 未来需要获取到父元素的高度
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
     }
 
     /**
