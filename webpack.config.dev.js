@@ -10,9 +10,11 @@ module.exports = {
         filename: '[name].js',
         publicPath: './dist',
         library: 'YMPaintSDK',
+        libraryTarget: 'window'
 
     },
     module: {
+        // 生成sourcemap
         rules: [{
             enforce: 'pre',
             test: /\.ts$/,

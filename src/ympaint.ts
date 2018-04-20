@@ -124,7 +124,6 @@ export class YMPaint {
             this.rect = null;
             this.history.rects.push(rect);
         }
-
         this.drawing = false;
     }
 
