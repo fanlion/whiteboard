@@ -9,7 +9,7 @@ body {
     padding: 0;
 }
 
-.whiteboard {
+#whiteboard {
     height: 100%;
     width: 100%;
     position: absolute;

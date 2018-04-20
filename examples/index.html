@@ -12,7 +12,7 @@
 <body>
 
   <!-- 画板 -->
-  <canvas class="whiteboard">
+  <canvas id="whiteboard">
     Your Browser not support Canvas
   </canvas>
 
@@ -28,8 +28,8 @@
 
     <!-- 形状选择 -->
     <select id="shapes">
-      <option value="line">线段</option>
       <option value="rect">矩形</option>
+      <option value="line">线段</option>
       <option value="circle">圆形</option>
     </select>
   </div>
@@ -40,7 +40,44 @@
   <script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 
   <!-- js -->
-  <script src="../dist/YMPaint.min.js"></script>
+  <script src="../dist/ympaint.js"></script>
+  <script>
+    var canvas = document.getElementById('whiteboard');
+    var colors = document.getElementById('colors');
+    var shapes = document.getElementById('shapes');
+
+    // 画笔配置
+    var config = {
+      canvas: canvas,
+      color: 'black',
+      radius: 0,
+      lineWidth: 2,
+      shape: 'rect'
+    };
+
+    // 初始画笔化实例
+    var paint = new YMPaintSDK.YMPaint(config);
+
+    // 添加监听函数
+    for (var i = 0; i < colors.length; i++) {
+      colors[i].addEventListener('click', hanlleUpdateColor, false);
+    }
+    shapes.addEventListener('change', handleUpdateShape, false);
+    
+    // 画笔颜色改变监听函数
+    function hanlleUpdateColor(e) {
+      var color = e.taget.className.split(' ')[1];
+      paint.setColor(color);
+    }
+
+    // 画笔形状改变监听函数
+    function handleUpdateShape(e) {
+      var options = e.target.options;
+      var index = e.target.selectedIndex;
+      var shape = options[index].value;
+      paint.setShape(shape);
+    }
+  </script>
 </body>
 
 </html>

@@ -10,7 +10,8 @@
     "babel-preset-env": "^1.6.1",
     "clean-webpack-plugin": "^0.1.19",
     "copy-webpack-plugin": "^4.5.1",
-    "ts-loader": "^4.2.0",
+    "source-map-loader": "^0.2.3",
+    "ts-loader": "3.5.0",
     "typescript": "^2.8.1",
     "uglifyjs-webpack-plugin": "^1.2.4",
     "webpack": "^3.1.3",
@@ -18,6 +19,7 @@
   },
   "scripts": {
     "test": "tsc -w && webpack -w && live-server --watch=src,dist",
-    "build": "tsc && webpack --config webpack.config.js --progress --color"
+    "dev": "webpack --config webpack.config.dev.js --progress --color",
+    "build": "tsc && webpack --config webpack.config.prod.js --progress --color"
   }
 }
