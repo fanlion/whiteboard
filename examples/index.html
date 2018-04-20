@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>白板Demo</title>
+  <link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <link rel="stylesheet" href="./css/index.css">
+</head>
+
+<body>
+
+  <!-- 画板 -->
+  <canvas class="whiteboard">
+    Your Browser not support Canvas
+  </canvas>
+
+  <div class="operate-panel">
+    <!-- 颜色选择 -->
+    <div id="colors">
+      <div class="color black"></div>
+      <div class="color red"></div>
+      <div class="color green"></div>
+      <div class="color blue"></div>
+      <div class="color yellow"></div>
+    </div>
+
+    <!-- 形状选择 -->
+    <select id="shapes">
+      <option value="line">线段</option>
+      <option value="rect">矩形</option>
+      <option value="circle">圆形</option>
+    </select>
+  </div>
+
+  <!-- demo dependency -->
+  <script src="https://cdn.bootcss.com/socket.io/2.1.0/socket.io.js"></script>
+  <script src="https://lib.sinaapp.com/js/jquery/1.12.4/jquery-1.12.4.min.js"></script>
+  <script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+  <!-- js -->
+  <script src="../dist/YMPaint.js"></script>
+</body>
+
+</html>
