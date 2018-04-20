@@ -7,7 +7,7 @@ module.exports = {
     },
     output: {
         path: path.join(__dirname, 'dist'),
-        filename: '[name].js',
+        filename: '[name].min.js',
         publicPath: './dist',
         library: 'YMPaintSDK',
         libraryTarget: 'window'

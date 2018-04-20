@@ -3,16 +3,16 @@
 
 <head>
   <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>白板Demo</title>
-  <link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css">
-  <link rel="stylesheet" href="./css/index.css">
+  <!-- <link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css"> -->
+  <link rel="stylesheet" type="text/css" href="./css/index.css">
 </head>
 
 <body>
-
   <!-- 画板 -->
-  <canvas id="whiteboard">
+  <canvas class="whiteboard">
     Your Browser not support Canvas
   </canvas>
 
@@ -35,23 +35,23 @@
   </div>
 
   <!-- demo dependency -->
-  <script src="https://cdn.bootcss.com/socket.io/2.1.0/socket.io.js"></script>
-  <script src="https://lib.sinaapp.com/js/jquery/1.12.4/jquery-1.12.4.min.js"></script>
-  <script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  <!-- <script src="https://cdn.bootcss.com/socket.io/2.1.0/socket.io.js"></script> -->
+  <!-- <script src="https://cdn.bootcss.com/jquery/1.12.4/jquery.min.js"></script> -->
+  <!-- <script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script> -->
 
   <!-- js -->
-  <script src="../dist/ympaint.js"></script>
+  <script src="../dist/ympaint.min.js"></script>
   <script>
-    var canvas = document.getElementById('whiteboard');
-    var colors = document.getElementById('colors');
+    var canvas = document.getElementsByClassName('whiteboard')[0];
+    var colors = document.getElementsByClassName('color');
     var shapes = document.getElementById('shapes');
 
     // 画笔配置
     var config = {
       canvas: canvas,
-      color: 'black',
+      color: 'red',
       radius: 0,
-      lineWidth: 2,
+      lineWidth: '1',
       shape: 'rect'
     };
 
@@ -66,7 +66,7 @@
     
     // 画笔颜色改变监听函数
     function hanlleUpdateColor(e) {
-      var color = e.taget.className.split(' ')[1];
+      var color = e.target.className.split(' ')[1];
       paint.setColor(color);
     }
 

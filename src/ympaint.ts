@@ -18,13 +18,15 @@ interface History {
 }
 
 interface Rect {
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-    radius: number,
-    lineWidth: number,
-    color: string
+    x?: number,
+    y?: number,
+    realX?: number,
+    realY?: number,
+    width?: number,
+    height?: number,
+    radius?: number,
+    lineWidth?: number,
+    color?: string
 }
 
 
@@ -57,7 +59,13 @@ export class YMPaint {
         this.radius = config.radius || 0;
         this.shape = config.shape || 'line';
 
-        console.log('shape', this.shape);
+        this.rect = {};
+        this.history = {
+            lines: [],
+            rects: [],
+            circles: [],
+            arrows: [],
+        }
 
         // 绑定事件
         this.bindEvent();
@@ -91,14 +99,18 @@ export class YMPaint {
                 this.rect.width = Math.abs(this.rect.x - e.clientX);
                 this.rect.height = Math.abs(this.rect.y - e.clientY);
                 if (this.rect.x > e.clientX) {
-                    this.rect.x = e.clientX;
+                    this.rect.realX = e.clientX;
+                } else {
+                    this.rect.realX = this.rect.x;
                 }
                 if (this.rect.y > e.clientY) {
-                    this.rect.y = e.clientY;
+                    this.rect.realY = e.clientY;
+                } else {
+                    this.rect.realY = this.rect.y;
                 }
                 this.clear();
                 this.redrawAll();
-                this.drawRect(this.rect.x, this.rect.y, this.rect.width, this.rect.height, this.radius, this.color, this.lineWidth);
+                this.drawRect(this.rect.realX, this.rect.realY, this.rect.width, this.rect.height, this.radius, this.color, this.lineWidth);
             }
         }
     }
@@ -113,21 +125,24 @@ export class YMPaint {
     private handleMouseUp(e: MouseEvent): void {
         if (this.shape === 'rect') {
             const rect = {
-                x: this.rect.x,
-                y: this.rect.y,
+                realX: this.rect.x,
+                realY: this.rect.y,
                 width: this.rect.width,
                 height: this.rect.height,
                 radius: this.radius,
                 color: this.color,
                 lineWidth: this.lineWidth
             };
-            this.rect = null;
+            this.rect = {};
             this.history.rects.push(rect);
         }
         this.drawing = false;
     }
 
     private createRect(x: number, y: number, width: number, height: number, radius: number, color: string, type: string, lineWidth: number): void {
+        console.log('createRect: x: %s, y: %s, width: %s, height: %s, radius: %s, color: %s, type: %s, lineWidth: %s',
+            x, y, width, height, radius, color, type, lineWidth);
+
         this.context.beginPath();
         this.context.moveTo(x, y + radius);
         this.context.lineTo(x, y + height - radius);
@@ -171,9 +186,9 @@ export class YMPaint {
      */
     private bindEvent(): void {
         // 给canvas绑定事件
-        this.canvas.addEventListener('mousedown', this.handleMouseDown, false);
-        this.canvas.addEventListener('mousemove', this.handleMouseMove, false);
-        this.canvas.addEventListener('mouseup', YMPaint.throttle(this.handleMouseUp, 10), false);
+        this.canvas.addEventListener('mousedown', this.handleMouseDown.bind(this), false);
+        this.canvas.addEventListener('mousemove', this.throttle(this.handleMouseMove, 10), false);
+        this.canvas.addEventListener('mouseup', this.handleMouseUp.bind(this), false);
     }
 
     /**
@@ -183,10 +198,12 @@ export class YMPaint {
      * @memberof YMPaint
      */
     private redrawAll() {
+        console.log('redrawAll rects', this.history.rects);
         if (this.history.rects.length > 0) {
             const self = this;
             this.history.rects.forEach(function (item) {
-                self.drawRect(item.x, item.y, item.width, item.height, item.radius, item.color, item.lineWidth);
+                console.log('绘制 item', item);
+                self.drawRect(item.realX, item.realY, item.width, item.height, item.radius, item.color, item.lineWidth);
             });
         }
     }
@@ -226,13 +243,14 @@ export class YMPaint {
      * @returns {Function} 
      * @memberof YMPaint
      */
-    public static throttle(callback: Function, delay: number) {
+    public throttle(callback: Function, delay: number) {
+        var self = this;
         var previousCall = new Date().getTime();
         return function () {
             var time = new Date().getTime();
             if ((time - previousCall) >= delay) {
                 previousCall = time;
-                callback.apply(null, arguments);
+                callback.apply(self, arguments);
             }
         }
     }
