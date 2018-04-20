@@ -125,8 +125,8 @@ export class YMPaint {
     private handleMouseUp(e: MouseEvent): void {
         if (this.shape === 'rect') {
             const rect = {
-                realX: this.rect.x,
-                realY: this.rect.y,
+                realX: this.rect.realX,
+                realY: this.rect.realY,
                 width: this.rect.width,
                 height: this.rect.height,
                 radius: this.radius,
@@ -140,9 +140,6 @@ export class YMPaint {
     }
 
     private createRect(x: number, y: number, width: number, height: number, radius: number, color: string, type: string, lineWidth: number): void {
-        console.log('createRect: x: %s, y: %s, width: %s, height: %s, radius: %s, color: %s, type: %s, lineWidth: %s',
-            x, y, width, height, radius, color, type, lineWidth);
-
         this.context.beginPath();
         this.context.moveTo(x, y + radius);
         this.context.lineTo(x, y + height - radius);
@@ -202,7 +199,6 @@ export class YMPaint {
         if (this.history.rects.length > 0) {
             const self = this;
             this.history.rects.forEach(function (item) {
-                console.log('绘制 item', item);
                 self.drawRect(item.realX, item.realY, item.width, item.height, item.radius, item.color, item.lineWidth);
             });
         }

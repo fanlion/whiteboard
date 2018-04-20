@@ -16,7 +16,7 @@
     Your Browser not support Canvas
   </canvas>
 
-  <div class="operate-panel">
+  <div class="operate-panel" style="display: none;">
     <!-- 颜色选择 -->
     <div id="colors">
       <div class="color black"></div>
@@ -27,7 +27,7 @@
     </div>
 
     <!-- 形状选择 -->
-    <select id="shapes">
+    <select id="shapes" style="display: none;">
       <option value="rect">矩形</option>
       <option value="line">线段</option>
       <option value="circle">圆形</option>
@@ -51,7 +51,7 @@
       canvas: canvas,
       color: 'red',
       radius: 0,
-      lineWidth: '1',
+      lineWidth: '2',
       shape: 'rect'
     };
 
