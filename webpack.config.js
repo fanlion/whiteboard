@@ -12,7 +12,7 @@ module.exports = {
         path: path.join(__dirname, 'dist'),
         filename: '[name].min.js',
         publicPath: "./dist",
-        library: 'YMPaint',
+        library: 'YMPaintSDK',
         libraryTarget: "window" // 小程序用 umd，浏览器用 window
     },
     plugins: [
