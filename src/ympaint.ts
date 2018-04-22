@@ -338,14 +338,14 @@ export class YMPaint {
     }
 
     private getRadian(beginPoint: Point, stopPoint: Point): void {
-        this.angle = Math.atan2(stopPoint.y - beginPoint.y, stopPoint.x - beginPoint.y) / Math.PI * 180;
+        this.angle = Math.atan2(stopPoint.y - beginPoint.y, stopPoint.x - beginPoint.x) / Math.PI * 180;
     }
 
     private arrowCoord(beginPoint: Point, stopPoint: Point, range: number): void {
         this.polygonVertex[0] = beginPoint.x;
         this.polygonVertex[1] = beginPoint.y;
-        this.polygonVertex[6] = beginPoint.x;
-        this.polygonVertex[7] = beginPoint.y;
+        this.polygonVertex[6] = stopPoint.x;
+        this.polygonVertex[7] = stopPoint.y;
         this.getRadian(beginPoint, stopPoint);
         this.polygonVertex[8] = stopPoint.x - YMPaint.edgeLen * Math.cos(Math.PI / 180 * (this.angle + range));
         this.polygonVertex[9] = stopPoint.y - YMPaint.edgeLen * Math.sin(Math.PI / 180 * (this.angle + range));
