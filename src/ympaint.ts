@@ -10,7 +10,7 @@ export interface Options {
 }
 
 interface History {
-    lines: object[],
+    lines: Line[],
     arrows: object[],
     circles: object[],
     rects: Rect[]
@@ -26,6 +26,19 @@ interface Rect {
     radius?: number,
     lineWidth?: number,
     color?: string
+}
+
+interface Line {
+    x: number[],
+    y: number[],
+    clickDrag: number[],
+    lineWidth: number,
+    color: string
+}
+
+interface Storage {
+    x: number,
+    y: number
 }
 
 
@@ -45,7 +58,7 @@ export class YMPaint {
     private lineY: number[];
     private beginPoint: object;
     private stopPoint: object;
-    private storage: object;
+    private storage: Storage;
     private rect: Rect;
     private polygoVertex: number[];
     private history: History;
@@ -57,6 +70,9 @@ export class YMPaint {
         this.lineWidth = config.lineWidth || 2;
         this.radius = config.radius || 0;
         this.shape = config.shape || 'line';
+        this.lineX = [];
+        this.lineY = [];
+        this.clickDrag = [];
 
         this.rect = {};
         this.history = {
@@ -80,10 +96,15 @@ export class YMPaint {
      * @memberof YMPaint
      */
     private handleMouseDown(e: MouseEvent): void {
+        const x = e.clientX;
+        const y = e.clientY;
         this.drawing = true;
         if (this.shape === 'rect') {
-            this.rect.x = e.clientX;
-            this.rect.y = e.clientY;
+            this.rect.x = x;
+            this.rect.y = y;
+        } else if (this.shape === 'line') {
+            this.movePoint(x, y);
+            this.drawPoint(this.lineX, this.lineY, this.clickDrag, this.lineWidth, this.color);
         }
     }
 
@@ -112,6 +133,9 @@ export class YMPaint {
                 this.clear();
                 this.redrawAll();
                 this.drawRect(this.rect.realX, this.rect.realY, this.rect.width, this.rect.height, this.radius, this.color, this.lineWidth);
+            } else if (this.shape === 'line') {
+                this.movePoint(e.clientX, e.clientY);
+                this.drawPoint(this.lineX, this.lineY, this.clickDrag, this.lineWidth, this.color);
             }
         }
     }
@@ -136,9 +160,46 @@ export class YMPaint {
             };
             this.rect = {};
             this.history.rects.push(rect);
+        } else if (this.shape === 'line') {
+            const line = {
+                x: this.lineX,
+                y: this.lineY,
+                clickDrag: this.clickDrag,
+                lineWidth: this.lineWidth,
+                color: this.color
+            };
+            this.history.lines.push(line);
+            console.log('mouseUp lines: ', this.history.lines);
+            this.lineX = [];
+            this.lineY = [];
+            this.clickDrag = [];
         }
+
         this.drawing = false;
     }
+
+    private movePoint(x: number, y: number): void {
+        this.lineX.push(x);
+        this.lineY.push(y);
+        this.clickDrag.push(y);
+    }
+
+    private drawPoint(x: number[], y: number[], clickDrag: number[], lineWidth: number, color: string): void {
+        for (let i = 0; i < x.length; i++) {
+            this.context.beginPath();
+            if (clickDrag[i] && i) {
+                this.context.moveTo(x[i - 1], y[i - 1]);
+            } else {
+                this.context.moveTo(x[i] - 1, y[i]);
+            }
+            this.context.lineWidth = lineWidth;
+            this.context.strokeStyle = color;
+            this.context.lineTo(x[i], y[i]);
+            this.context.closePath();
+            this.context.stroke();
+        }
+    }
+
 
     private createRect(x: number, y: number, width: number, height: number, radius: number, color: string, type: string, lineWidth: number): void {
         this.context.beginPath();
@@ -202,11 +263,17 @@ export class YMPaint {
      * @memberof YMPaint
      */
     private redrawAll() {
-        console.log('redrawAll rects', this.history.rects);
+        console.log('redrawAll: ', this.history);
+        const self = this;
         if (this.history.rects.length > 0) {
-            const self = this;
             this.history.rects.forEach(function (item) {
                 self.drawRect(item.realX, item.realY, item.width, item.height, item.radius, item.color, item.lineWidth);
+            });
+        }
+        if (this.history.lines.length > 0) {
+            this.history.lines.forEach(function(item) {
+                console.log('item: ', item);
+                self.drawPoint(item.x, item.y, item.clickDrag, item.lineWidth, item.color);
             });
         }
     }
