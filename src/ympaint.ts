@@ -12,7 +12,7 @@ export interface Options {
 interface History {
     lines: Line[],
     arrows: object[],
-    circles: object[],
+    circles: Circle[],
     rects: Rect[]
 }
 
@@ -36,9 +36,18 @@ interface Line {
     color: string
 }
 
-interface Storage {
+interface Circle {
     x: number,
-    y: number
+    y: number,
+    a: number,
+    b: number,
+    lineWidth: number,
+    color: string
+}
+
+interface Storage {
+    x?: number,
+    y?: number
 }
 
 
@@ -72,6 +81,7 @@ export class YMPaint {
         this.shape = config.shape || 'line';
         this.lineX = [];
         this.lineY = [];
+        this.storage = {};
         this.clickDrag = [];
 
         this.rect = {};
@@ -105,6 +115,9 @@ export class YMPaint {
         } else if (this.shape === 'line') {
             this.movePoint(x, y);
             this.drawPoint(this.lineX, this.lineY, this.clickDrag, this.lineWidth, this.color);
+        } else if (this.shape === 'circle') {
+            this.storage.x = x;
+            this.storage.y = y;
         }
     }
 
@@ -136,6 +149,24 @@ export class YMPaint {
             } else if (this.shape === 'line') {
                 this.movePoint(e.clientX, e.clientY);
                 this.drawPoint(this.lineX, this.lineY, this.clickDrag, this.lineWidth, this.color);
+            } else if (this.shape === 'circle') {
+                let pointX = 0, pointY = 0;
+                if (this.storage.x > e.clientX) {
+                    pointX = this.storage.x - Math.abs(this.storage.x - e.clientX) / 2;
+                } else {
+                    pointX = Math.abs(this.storage.x - e.clientX) / 2 + this.storage.x;
+                }
+
+                if (this.storage.y > e.clientY) {
+                    pointY = this.storage.y - Math.abs(this.storage.y - e.clientY) / 2;
+                } else {
+                    pointY = Math.abs(this.storage.y - e.clientY) / 2 + this.storage.y;
+                }
+                let lineX = Math.abs(this.storage.x - e.clientX) / 2;
+                let lineY = Math.abs(this.storage.y - e.clientY) / 2;
+                this.clear();
+                this.redrawAll();
+                this.drawEllipse(pointX, pointY, lineX, lineY, this.lineWidth, this.color);
             }
         }
     }
@@ -169,10 +200,34 @@ export class YMPaint {
                 color: this.color
             };
             this.history.lines.push(line);
-            console.log('mouseUp lines: ', this.history.lines);
             this.lineX = [];
             this.lineY = [];
             this.clickDrag = [];
+        } else if (this.shape === 'circle') {
+            let pointX = 0, pointY = 0;
+            if (this.storage.x > e.clientX) {
+                pointX = this.storage.x - Math.abs(this.storage.x - e.clientX) / 2;
+            } else {
+                pointX = Math.abs(this.storage.x - e.clientX) / 2 + this.storage.x;
+            }
+
+            if (this.storage.y > e.clientY) {
+                pointY = this.storage.y - Math.abs(this.storage.y - e.clientY) / 2;
+            } else {
+                pointY = Math.abs(this.storage.y - e.clientY) / 2 + this.storage.y;
+            }
+            const lineX = Math.abs(this.storage.x - e.clientX) / 2;
+            const lineY = Math.abs(this.storage.y - e.clientY) / 2;
+            const circle = {
+                x: pointX,
+                y: pointY,
+                a: lineX,
+                b: lineY,
+                lineWidth: this.lineWidth,
+                color: this.color
+            };
+            this.history.circles.push(circle);
+            this.storage = {};
         }
 
         this.drawing = false;
@@ -200,6 +255,15 @@ export class YMPaint {
         }
     }
 
+    private drawEllipse(x: number, y: number, a: number, b: number, lineWidth: number, color: string): void {
+        this.context.beginPath();
+        this.context.ellipse(x, y, a, b, 0, 0, 2 * Math.PI);
+        this.context.lineWidth = lineWidth;
+        this.context.fillStyle = 'rgba(0, 0, 0, 0)';
+        this.context.strokeStyle = color;
+        this.context.fill();
+        this.context.stroke();
+    }
 
     private createRect(x: number, y: number, width: number, height: number, radius: number, color: string, type: string, lineWidth: number): void {
         this.context.beginPath();
@@ -270,10 +334,16 @@ export class YMPaint {
                 self.drawRect(item.realX, item.realY, item.width, item.height, item.radius, item.color, item.lineWidth);
             });
         }
+
         if (this.history.lines.length > 0) {
-            this.history.lines.forEach(function(item) {
-                console.log('item: ', item);
+            this.history.lines.forEach(function (item) {
                 self.drawPoint(item.x, item.y, item.clickDrag, item.lineWidth, item.color);
+            });
+        }
+
+        if (this.history.circles.length > 0) {
+            this.history.circles.forEach(function (item) {
+                self.drawEllipse(item.x, item.y, item.a, item.b, item.lineWidth, item.color);
             });
         }
     }
