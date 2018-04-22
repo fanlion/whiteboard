@@ -11,9 +11,16 @@ export interface Options {
 
 interface History {
     lines: Line[],
-    arrows: object[],
+    arrows: Arrow[],
     circles: Circle[],
     rects: Rect[]
+}
+
+interface Arrow {
+    beginPoint: Point,
+    stopPoint: Point,
+    range: number,
+    color: string
 }
 
 interface Rect {
@@ -45,13 +52,16 @@ interface Circle {
     color: string
 }
 
-interface Storage {
-    x?: number,
-    y?: number
+interface Point {
+    x: number,
+    y: number
 }
 
 
 export class YMPaint {
+    static edgeLen: number = 25;
+    static angle: number = 15;
+
     private canvas: HTMLCanvasElement;
     private context: CanvasRenderingContext2D;
 
@@ -65,11 +75,13 @@ export class YMPaint {
     private clickDrag: number[];
     private lineX: number[];
     private lineY: number[];
-    private beginPoint: object;
-    private stopPoint: object;
-    private storage: Storage;
+    private beginPoint: Point;
+    private stopPoint: Point;
+    private storage: Point;
     private rect: Rect;
-    private polygoVertex: number[];
+    private angle: number;
+    private range: number;
+    private polygonVertex: number[];
     private history: History;
 
     constructor(config: Options) {
@@ -79,10 +91,15 @@ export class YMPaint {
         this.lineWidth = config.lineWidth || 2;
         this.radius = config.radius || 0;
         this.shape = config.shape || 'line';
+        this.angle = 0;
+        this.range = 25;
         this.lineX = [];
         this.lineY = [];
-        this.storage = {};
+        this.storage = { x: 0, y: 0 };
         this.clickDrag = [];
+        this.polygonVertex = [];
+        this.beginPoint = { x: 0, y: 0 };
+        this.stopPoint = { x: 0, y: 0 };
 
         this.rect = {};
         this.history = {
@@ -118,6 +135,9 @@ export class YMPaint {
         } else if (this.shape === 'circle') {
             this.storage.x = x;
             this.storage.y = y;
+        } else if (this.shape === 'arrow') {
+            this.beginPoint.x = x;
+            this.beginPoint.y = y;
         }
     }
 
@@ -167,6 +187,14 @@ export class YMPaint {
                 this.clear();
                 this.redrawAll();
                 this.drawEllipse(pointX, pointY, lineX, lineY, this.lineWidth, this.color);
+            } else if (this.shape === 'arrow') {
+                this.stopPoint.x = e.clientX;
+                this.stopPoint.y = e.clientY;
+                this.clear();
+                this.redrawAll();
+                this.arrowCoord(this.beginPoint, this.stopPoint, this.range)
+                this.sideCoord();
+                this.drawArrow(this.color);
             }
         }
     }
@@ -227,9 +255,17 @@ export class YMPaint {
                 color: this.color
             };
             this.history.circles.push(circle);
-            this.storage = {};
+            this.storage = { x: 0, y: 0 };
+        } else if (this.shape === 'arrow') {
+            const arrow = {
+                beginPoint: this.beginPoint,
+                stopPoint: { x: e.clientX, y: e.clientY },
+                range: this.range,
+                color: this.color
+            };
+            this.history.arrows.push(arrow);
+            this.beginPoint = { x: 0, y: 0 };
         }
-
         this.drawing = false;
     }
 
@@ -301,6 +337,46 @@ export class YMPaint {
         this.createRect(x, y, width, height, radius, color, 'stroke', lineWidth);
     }
 
+    private getRadian(beginPoint: Point, stopPoint: Point): void {
+        this.angle = Math.atan2(stopPoint.y - beginPoint.y, stopPoint.x - beginPoint.y) / Math.PI * 180;
+    }
+
+    private arrowCoord(beginPoint: Point, stopPoint: Point, range: number): void {
+        this.polygonVertex[0] = beginPoint.x;
+        this.polygonVertex[1] = beginPoint.y;
+        this.polygonVertex[6] = beginPoint.x;
+        this.polygonVertex[7] = beginPoint.y;
+        this.getRadian(beginPoint, stopPoint);
+        this.polygonVertex[8] = stopPoint.x - YMPaint.edgeLen * Math.cos(Math.PI / 180 * (this.angle + range));
+        this.polygonVertex[9] = stopPoint.y - YMPaint.edgeLen * Math.sin(Math.PI / 180 * (this.angle + range));
+        this.polygonVertex[4] = stopPoint.x - YMPaint.edgeLen * Math.cos(Math.PI / 180 * (this.angle - range));
+        this.polygonVertex[5] = stopPoint.y - YMPaint.edgeLen * Math.sin(Math.PI / 180 * (this.angle - range));
+    }
+
+    private sideCoord(): void {
+        const midPoint: Point = { x: 0, y: 0 };
+        midPoint.x = (this.polygonVertex[4] + this.polygonVertex[8]) / 2;
+        midPoint.y = (this.polygonVertex[5] + this.polygonVertex[9]) / 2;
+        this.polygonVertex[2] = (this.polygonVertex[4] + midPoint.x) / 2;
+        this.polygonVertex[3] = (this.polygonVertex[5] + midPoint.y) / 2;
+        this.polygonVertex[10] = (this.polygonVertex[8] + midPoint.x) / 2;
+        this.polygonVertex[11] = (this.polygonVertex[9] + midPoint.y) / 2;
+    }
+
+    private drawArrow(color: string): void {
+        this.context.fillStyle = color;
+        this.context.beginPath();
+        this.context.moveTo(this.polygonVertex[0], this.polygonVertex[1]);
+        this.context.lineTo(this.polygonVertex[2], this.polygonVertex[3]);
+        this.context.lineTo(this.polygonVertex[4], this.polygonVertex[5]);
+        this.context.lineTo(this.polygonVertex[6], this.polygonVertex[7]);
+        this.context.lineTo(this.polygonVertex[8], this.polygonVertex[9]);
+        this.context.lineTo(this.polygonVertex[10], this.polygonVertex[11]);
+        this.context.closePath();
+        this.context.fill();
+
+    }
+
     /**
      * 绑定事件
      * 
@@ -344,6 +420,15 @@ export class YMPaint {
         if (this.history.circles.length > 0) {
             this.history.circles.forEach(function (item) {
                 self.drawEllipse(item.x, item.y, item.a, item.b, item.lineWidth, item.color);
+            });
+        }
+
+        if (this.history.arrows.length > 0) {
+            this.history.arrows.forEach(function (item) {
+                // if (item != {})
+                self.arrowCoord(item.beginPoint, item.stopPoint, item.range);
+                self.sideCoord();
+                self.drawArrow(item.color);
             });
         }
     }
