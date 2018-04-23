@@ -50,9 +50,35 @@ interface Circle {
     color: string
 }
 
-interface Point {
-    x: number,
-    y: number
+class Point {
+    private x: number;
+    private y: number;
+
+    constructor(x: number = 0, y: number = 0) {
+        this.x = x;
+        this.y = y;
+    }
+
+    public setXY(x: number, y: number) {
+        this.x = x;
+        this.y = y;
+    }
+
+    public getX(): number {
+        return this.x;
+    }
+
+    public setX(x: number): void {
+        this.x = x;
+    }
+
+    public getY(): number {
+        return this.y;
+    }
+
+    public setY(y: number) {
+        this.y = y;
+    }
 }
 
 
@@ -93,10 +119,10 @@ export class YMPaint {
 
         this.points = [];
 
-        this.storage = { x: 0, y: 0 };
+        this.storage = new Point();
         this.polygonVertex = [];
-        this.beginPoint = { x: 0, y: 0 };
-        this.stopPoint = { x: 0, y: 0 };
+        this.beginPoint = new Point();
+        this.stopPoint = new Point();
 
         this.rect = {};
         this.history = {
@@ -130,11 +156,9 @@ export class YMPaint {
             this.movePoint(x, y);
             this.drawPoint(this.points, this.lineWidth, this.color);
         } else if (this.shape === 'circle') {
-            this.storage.x = x;
-            this.storage.y = y;
+            this.storage.setXY(x, y);
         } else if (this.shape === 'arrow') {
-            this.beginPoint.x = x;
-            this.beginPoint.y = y;
+            this.beginPoint.setXY(x, y);
         }
     }
 
@@ -168,25 +192,24 @@ export class YMPaint {
                 this.drawPoint(this.points, this.lineWidth, this.color);
             } else if (this.shape === 'circle') {
                 let pointX = 0, pointY = 0;
-                if (this.storage.x > e.clientX) {
-                    pointX = this.storage.x - Math.abs(this.storage.x - e.clientX) / 2;
+                if (this.storage.getX() > e.clientX) {
+                    pointX = this.storage.getX() - Math.abs(this.storage.getX() - e.clientX) / 2;
                 } else {
-                    pointX = Math.abs(this.storage.x - e.clientX) / 2 + this.storage.x;
+                    pointX = Math.abs(this.storage.getX() - e.clientX) / 2 + this.storage.getX();
                 }
 
-                if (this.storage.y > e.clientY) {
-                    pointY = this.storage.y - Math.abs(this.storage.y - e.clientY) / 2;
+                if (this.storage.getY() > e.clientY) {
+                    pointY = this.storage.getY() - Math.abs(this.storage.getY() - e.clientY) / 2;
                 } else {
-                    pointY = Math.abs(this.storage.y - e.clientY) / 2 + this.storage.y;
+                    pointY = Math.abs(this.storage.getY() - e.clientY) / 2 + this.storage.getY();
                 }
-                let lineX = Math.abs(this.storage.x - e.clientX) / 2;
-                let lineY = Math.abs(this.storage.y - e.clientY) / 2;
+                let lineX = Math.abs(this.storage.getX() - e.clientX) / 2;
+                let lineY = Math.abs(this.storage.getY() - e.clientY) / 2;
                 this.clear();
                 this.redrawAll();
                 this.drawEllipse(pointX, pointY, lineX, lineY, this.lineWidth, this.color);
             } else if (this.shape === 'arrow') {
-                this.stopPoint.x = e.clientX;
-                this.stopPoint.y = e.clientY;
+                this.stopPoint.setXY(e.clientX, e.clientY);
                 this.clear();
                 this.redrawAll();
                 this.arrowCoord(this.beginPoint, this.stopPoint, this.range)
@@ -226,19 +249,19 @@ export class YMPaint {
             this.points = [];
         } else if (this.shape === 'circle') {
             let pointX = 0, pointY = 0;
-            if (this.storage.x > e.clientX) {
-                pointX = this.storage.x - Math.abs(this.storage.x - e.clientX) / 2;
+            if (this.storage.getX() > e.clientX) {
+                pointX = this.storage.getX() - Math.abs(this.storage.getX() - e.clientX) / 2;
             } else {
-                pointX = Math.abs(this.storage.x - e.clientX) / 2 + this.storage.x;
+                pointX = Math.abs(this.storage.getX() - e.clientX) / 2 + this.storage.getX();
             }
 
-            if (this.storage.y > e.clientY) {
-                pointY = this.storage.y - Math.abs(this.storage.y - e.clientY) / 2;
+            if (this.storage.getY() > e.clientY) {
+                pointY = this.storage.getY() - Math.abs(this.storage.getY() - e.clientY) / 2;
             } else {
-                pointY = Math.abs(this.storage.y - e.clientY) / 2 + this.storage.y;
+                pointY = Math.abs(this.storage.getY() - e.clientY) / 2 + this.storage.getY();
             }
-            const lineX = Math.abs(this.storage.x - e.clientX) / 2;
-            const lineY = Math.abs(this.storage.y - e.clientY) / 2;
+            const lineX = Math.abs(this.storage.getX() - e.clientX) / 2;
+            const lineY = Math.abs(this.storage.getY() - e.clientY) / 2;
             const circle = {
                 x: pointX,
                 y: pointY,
@@ -248,35 +271,35 @@ export class YMPaint {
                 color: this.color
             };
             this.history.circles.push(circle);
-            this.storage = { x: 0, y: 0 };
+            this.storage = new Point();
         } else if (this.shape === 'arrow') {
             const arrow = {
                 beginPoint: this.beginPoint,
-                stopPoint: { x: e.clientX, y: e.clientY },
+                stopPoint: new Point(e.clientX, e.clientY),
                 range: this.range,
                 color: this.color
             };
             this.history.arrows.push(arrow);
-            this.beginPoint = { x: 0, y: 0 };
+            this.beginPoint = new Point();
         }
         this.drawing = false;
     }
 
     private movePoint(x: number, y: number): void {
-        this.points.push({x: x, y: y});
+        this.points.push(new Point(x, y));
     }
 
     private drawPoint(points: Point[], lineWidth: number, color: string): void {
         for (let i = 0; i < points.length; i++) {
             this.context.beginPath();
-            if (points[i].y && i) {
-                this.context.moveTo(points[i - 1].x, points[i - 1].y);
+            if (points[i].getY() && i) {
+                this.context.moveTo(points[i - 1].getX(), points[i - 1].getY());
             } else {
-                this.context.moveTo(points[i].x - 1, points[i].y);
+                this.context.moveTo(points[i].getX() - 1, points[i].getY());
             }
             this.context.lineWidth = lineWidth;
             this.context.strokeStyle = color;
-            this.context.lineTo(points[i].x, points[i].y);
+            this.context.lineTo(points[i].getX(), points[i].getY());
             this.context.closePath();
             this.context.stroke();
         }
@@ -329,29 +352,29 @@ export class YMPaint {
     }
 
     private getRadian(beginPoint: Point, stopPoint: Point): void {
-        this.angle = Math.atan2(stopPoint.y - beginPoint.y, stopPoint.x - beginPoint.x) / Math.PI * 180;
+        this.angle = Math.atan2(stopPoint.getY() - beginPoint.getY(), stopPoint.getX() - beginPoint.getX()) / Math.PI * 180;
     }
 
     private arrowCoord(beginPoint: Point, stopPoint: Point, range: number): void {
-        this.polygonVertex[0] = beginPoint.x;
-        this.polygonVertex[1] = beginPoint.y;
-        this.polygonVertex[6] = stopPoint.x;
-        this.polygonVertex[7] = stopPoint.y;
+        this.polygonVertex[0] = beginPoint.getX();
+        this.polygonVertex[1] = beginPoint.getY();
+        this.polygonVertex[6] = stopPoint.getX();
+        this.polygonVertex[7] = stopPoint.getY();
         this.getRadian(beginPoint, stopPoint);
-        this.polygonVertex[8] = stopPoint.x - YMPaint.edgeLen * Math.cos(Math.PI / 180 * (this.angle + range));
-        this.polygonVertex[9] = stopPoint.y - YMPaint.edgeLen * Math.sin(Math.PI / 180 * (this.angle + range));
-        this.polygonVertex[4] = stopPoint.x - YMPaint.edgeLen * Math.cos(Math.PI / 180 * (this.angle - range));
-        this.polygonVertex[5] = stopPoint.y - YMPaint.edgeLen * Math.sin(Math.PI / 180 * (this.angle - range));
+        this.polygonVertex[8] = stopPoint.getX() - YMPaint.edgeLen * Math.cos(Math.PI / 180 * (this.angle + range));
+        this.polygonVertex[9] = stopPoint.getY() - YMPaint.edgeLen * Math.sin(Math.PI / 180 * (this.angle + range));
+        this.polygonVertex[4] = stopPoint.getX() - YMPaint.edgeLen * Math.cos(Math.PI / 180 * (this.angle - range));
+        this.polygonVertex[5] = stopPoint.getY() - YMPaint.edgeLen * Math.sin(Math.PI / 180 * (this.angle - range));
     }
 
     private sideCoord(): void {
-        const midPoint: Point = { x: 0, y: 0 };
-        midPoint.x = (this.polygonVertex[4] + this.polygonVertex[8]) / 2;
-        midPoint.y = (this.polygonVertex[5] + this.polygonVertex[9]) / 2;
-        this.polygonVertex[2] = (this.polygonVertex[4] + midPoint.x) / 2;
-        this.polygonVertex[3] = (this.polygonVertex[5] + midPoint.y) / 2;
-        this.polygonVertex[10] = (this.polygonVertex[8] + midPoint.x) / 2;
-        this.polygonVertex[11] = (this.polygonVertex[9] + midPoint.y) / 2;
+        const x = (this.polygonVertex[4] + this.polygonVertex[8]) / 2;
+        const y = (this.polygonVertex[5] + this.polygonVertex[9]) / 2;
+        const midPoint: Point = new Point(x, y);
+        this.polygonVertex[2] = (this.polygonVertex[4] + midPoint.getX()) / 2;
+        this.polygonVertex[3] = (this.polygonVertex[5] + midPoint.getY()) / 2;
+        this.polygonVertex[10] = (this.polygonVertex[8] + midPoint.getX()) / 2;
+        this.polygonVertex[11] = (this.polygonVertex[9] + midPoint.getY()) / 2;
     }
 
     private drawArrow(color: string): void {
