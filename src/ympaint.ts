@@ -1,7 +1,7 @@
 export var isDebug = false;
 export var version = '1.0.0';
 
-export interface Options {
+interface Options {
     canvas: HTMLCanvasElement,
     color?: string,
     lineWidth?: number,
@@ -36,9 +36,7 @@ interface Rect {
 }
 
 interface Line {
-    x: number[],
-    y: number[],
-    clickDrag: number[],
+    points: Point[],
     lineWidth: number,
     color: string
 }
@@ -72,9 +70,8 @@ export class YMPaint {
 
     private drawing: boolean;
 
-    private clickDrag: number[];
-    private lineX: number[];
-    private lineY: number[];
+    private points: Point[];
+
     private beginPoint: Point;
     private stopPoint: Point;
     private storage: Point;
@@ -93,10 +90,10 @@ export class YMPaint {
         this.shape = config.shape || 'line';
         this.angle = 0;
         this.range = 25;
-        this.lineX = [];
-        this.lineY = [];
+
+        this.points = [];
+
         this.storage = { x: 0, y: 0 };
-        this.clickDrag = [];
         this.polygonVertex = [];
         this.beginPoint = { x: 0, y: 0 };
         this.stopPoint = { x: 0, y: 0 };
@@ -131,7 +128,7 @@ export class YMPaint {
             this.rect.y = y;
         } else if (this.shape === 'line') {
             this.movePoint(x, y);
-            this.drawPoint(this.lineX, this.lineY, this.clickDrag, this.lineWidth, this.color);
+            this.drawPoint(this.points, this.lineWidth, this.color);
         } else if (this.shape === 'circle') {
             this.storage.x = x;
             this.storage.y = y;
@@ -168,7 +165,7 @@ export class YMPaint {
                 this.drawRect(this.rect.realX, this.rect.realY, this.rect.width, this.rect.height, this.radius, this.color, this.lineWidth);
             } else if (this.shape === 'line') {
                 this.movePoint(e.clientX, e.clientY);
-                this.drawPoint(this.lineX, this.lineY, this.clickDrag, this.lineWidth, this.color);
+                this.drawPoint(this.points, this.lineWidth, this.color);
             } else if (this.shape === 'circle') {
                 let pointX = 0, pointY = 0;
                 if (this.storage.x > e.clientX) {
@@ -221,16 +218,12 @@ export class YMPaint {
             this.history.rects.push(rect);
         } else if (this.shape === 'line') {
             const line = {
-                x: this.lineX,
-                y: this.lineY,
-                clickDrag: this.clickDrag,
+                points: this.points,
                 lineWidth: this.lineWidth,
                 color: this.color
             };
             this.history.lines.push(line);
-            this.lineX = [];
-            this.lineY = [];
-            this.clickDrag = [];
+            this.points = [];
         } else if (this.shape === 'circle') {
             let pointX = 0, pointY = 0;
             if (this.storage.x > e.clientX) {
@@ -270,22 +263,20 @@ export class YMPaint {
     }
 
     private movePoint(x: number, y: number): void {
-        this.lineX.push(x);
-        this.lineY.push(y);
-        this.clickDrag.push(y);
+        this.points.push({x: x, y: y});
     }
 
-    private drawPoint(x: number[], y: number[], clickDrag: number[], lineWidth: number, color: string): void {
-        for (let i = 0; i < x.length; i++) {
+    private drawPoint(points: Point[], lineWidth: number, color: string): void {
+        for (let i = 0; i < points.length; i++) {
             this.context.beginPath();
-            if (clickDrag[i] && i) {
-                this.context.moveTo(x[i - 1], y[i - 1]);
+            if (points[i].y && i) {
+                this.context.moveTo(points[i - 1].x, points[i - 1].y);
             } else {
-                this.context.moveTo(x[i] - 1, y[i]);
+                this.context.moveTo(points[i].x - 1, points[i].y);
             }
             this.context.lineWidth = lineWidth;
             this.context.strokeStyle = color;
-            this.context.lineTo(x[i], y[i]);
+            this.context.lineTo(points[i].x, points[i].y);
             this.context.closePath();
             this.context.stroke();
         }
@@ -413,7 +404,7 @@ export class YMPaint {
 
         if (this.history.lines.length > 0) {
             this.history.lines.forEach(function (item) {
-                self.drawPoint(item.x, item.y, item.clickDrag, item.lineWidth, item.color);
+                self.drawPoint(item.points, item.lineWidth, item.color);
             });
         }
 
