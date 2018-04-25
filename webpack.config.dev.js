@@ -17,10 +17,10 @@ module.exports = {
         // 生成sourcemap
         rules: [{
             enforce: 'pre',
-            test: /\.ts$/,
+            test: /\.ts?$/,
             loader: 'source-map-loader'
         }, {
-            test: /\.ts$/,
+            test: /\.ts?$/,
             loader: 'ts-loader',
             exclude: /node_moudles/
         }]

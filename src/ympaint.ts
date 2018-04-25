@@ -1,6 +1,10 @@
 export var isDebug = false;
 export var version = '1.0.0';
 
+import Point from './shapes/Point';
+import Circle from './shapes/Circle';
+
+
 interface Options {
     canvas: HTMLCanvasElement,
     color?: string,
@@ -40,47 +44,6 @@ interface Line {
     lineWidth: number,
     color: string
 }
-
-interface Circle {
-    x: number,
-    y: number,
-    a: number,
-    b: number,
-    lineWidth: number,
-    color: string
-}
-
-class Point {
-    private x: number;
-    private y: number;
-
-    constructor(x: number = 0, y: number = 0) {
-        this.x = x;
-        this.y = y;
-    }
-
-    public setXY(x: number, y: number) {
-        this.x = x;
-        this.y = y;
-    }
-
-    public getX(): number {
-        return this.x;
-    }
-
-    public setX(x: number): void {
-        this.x = x;
-    }
-
-    public getY(): number {
-        return this.y;
-    }
-
-    public setY(y: number) {
-        this.y = y;
-    }
-}
-
 
 export class YMPaint {
     static edgeLen: number = 25;
@@ -262,14 +225,8 @@ export class YMPaint {
             }
             const lineX = Math.abs(this.storage.getX() - e.clientX) / 2;
             const lineY = Math.abs(this.storage.getY() - e.clientY) / 2;
-            const circle = {
-                x: pointX,
-                y: pointY,
-                a: lineX,
-                b: lineY,
-                lineWidth: this.lineWidth,
-                color: this.color
-            };
+            const circle = new Circle(pointX, pointY, lineX, lineY, this.color, this.lineWidth);
+
             this.history.circles.push(circle);
             this.storage = new Point();
         } else if (this.shape === 'arrow') {
@@ -433,7 +390,7 @@ export class YMPaint {
 
         if (this.history.circles.length > 0) {
             this.history.circles.forEach(function (item) {
-                self.drawEllipse(item.x, item.y, item.a, item.b, item.lineWidth, item.color);
+                self.drawEllipse(item.x, item.y, item.a, item.b, item.getLineWidth(), item.getColor());
             });
         }
 
@@ -493,5 +450,4 @@ export class YMPaint {
             }
         }
     }
-
 }
