@@ -18,6 +18,41 @@ class Paint {
         this.context = canvas.getContext('2d');
     }
 
+    /**
+     * 画点
+     * 
+     * @param {Point[]} points 
+     * @param {number} lineWidth 
+     * @param {string} color 
+     * @memberof Paint
+     */
+    public drawPoint(points: Point[], lineWidth: number, color: string): void {
+        for (let i = 0; i < points.length; i++) {
+            this.context.beginPath();
+            if (points[i].y && i) {
+                this.context.moveTo(points[i - 1].x, points[i - 1].y);
+            } else {
+                this.context.moveTo(points[i].x - 1, points[i].y);
+            }
+            this.context.lineWidth = lineWidth;
+            this.context.strokeStyle = color;
+            this.context.lineTo(points[i].x, points[i].y);
+            this.context.closePath();
+            this.context.stroke();
+        }
+    }
+
+    /**
+     * 画椭圆
+     * 
+     * @param {number} x 
+     * @param {number} y 
+     * @param {number} a 
+     * @param {number} b 
+     * @param {number} lineWidth 
+     * @param {string} color 
+     * @memberof Paint
+     */
     public drawEllipse(x: number, y: number, a: number, b: number, lineWidth: number, color: string): void {
         this.context.beginPath();
         this.context.ellipse(x, y, a, b, 0, 0, 2 * Math.PI);
@@ -47,7 +82,20 @@ class Paint {
         this.context[type]();
     }
 
-    private drawRect(x: number, y: number, width: number, height: number, radius: number, color: string, lineWidth: number): void {
+    /**
+     * 画空心矩形
+     * 
+     * @private
+     * @param {number} x 
+     * @param {number} y 
+     * @param {number} width 
+     * @param {number} height 
+     * @param {number} radius 
+     * @param {string} color 
+     * @param {number} lineWidth 
+     * @memberof Paint
+     */
+     public drawRect(x: number, y: number, width: number, height: number, radius: number, color: string, lineWidth: number): void {
         this.createRect(x, y, width, height, radius, color, 'stroke', lineWidth);
     }
 
@@ -58,7 +106,7 @@ class Paint {
         polygonVertex[6] = stopPoint.x;
         polygonVertex[7] = stopPoint.y;
         // 获取弧度
-        const angle =  Math.atan2(stopPoint.y - beginPoint.y, stopPoint.x - beginPoint.x) / Math.PI * 180;
+        const angle = Math.atan2(stopPoint.y - beginPoint.y, stopPoint.x - beginPoint.x) / Math.PI * 180;
         polygonVertex[8] = stopPoint.x - Paint.edgeLen * Math.cos(Math.PI / 180 * (angle + range));
         polygonVertex[9] = stopPoint.y - Paint.edgeLen * Math.sin(Math.PI / 180 * (angle + range));
         polygonVertex[4] = stopPoint.x - Paint.edgeLen * Math.cos(Math.PI / 180 * (angle - range));
@@ -77,8 +125,19 @@ class Paint {
         polygonVertex[11] = (polygonVertex[9] + midPoint.y) / 2;
     }
 
+    /**
+     * 画箭头
+     * 
+     * @param {Point} beginPoint 
+     * @param {Point} stopPoint 
+     * @param {string} color 
+     * @param {number} range 
+     * @memberof Paint
+     */
     public drawArrow(beginPoint: Point, stopPoint: Point, color: string, range: number, ): void {
         const polygonVertex = this.arrowCoord(beginPoint, stopPoint, range);
+        this.sideCoord(polygonVertex);
+
         this.context.fillStyle = color;
         this.context.beginPath();
         this.context.moveTo(polygonVertex[0], polygonVertex[1]);
@@ -89,6 +148,16 @@ class Paint {
         this.context.lineTo(polygonVertex[10], polygonVertex[11]);
         this.context.closePath();
         this.context.fill();
+    }
+
+
+    /**
+     * 清空画板
+     * 
+     * @memberof Paint
+     */
+    public clean(): void {
+        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
     }
 }
 
