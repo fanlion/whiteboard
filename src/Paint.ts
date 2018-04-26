@@ -150,6 +150,25 @@ class Paint {
         this.context.fill();
     }
 
+    /**
+     * 绘制直线
+     * 
+     * @param {Point} beginPoint 
+     * @param {Point} stopPoint 
+     * @param {string} color 
+     * @param {number} lineWidth 
+     * @memberof Paint
+     */
+    public drawLine(beginPoint: Point, stopPoint: Point, color: string, lineWidth: number): void {
+        this.context.beginPath();
+        this.context.strokeStyle = color;
+        this.context.lineWidth = lineWidth;
+        this.context.moveTo(beginPoint.x, beginPoint.y);
+        this.context.lineTo(stopPoint.x, stopPoint.y);
+        this.context.closePath();
+        this.context.stroke();
+    }
+
 
     /**
      * 清空画板

@@ -8,8 +8,7 @@ import Rectangle from './shapes/Rectangle';
 import Curve from './shapes/Curve';
 import Arrow from './shapes/Arrow';
 import ShapeBase from './shapes/ShapeBase';
-// import Line from './shapes/Line';
-
+import Line from './shapes/Line';
 
 interface Options {
     canvas: HTMLCanvasElement,
@@ -44,7 +43,6 @@ export class YMPaint {
     private angle: number;
     private range: number;
 
-    // private history: History;
     private history: ShapeBase[]
 
     constructor(config: Options) {
@@ -84,13 +82,16 @@ export class YMPaint {
         if (this.shape === 'rect') {
             this.beginPoint.x = x;
             this.beginPoint.y = y;
-        } else if (this.shape === 'line') {
+        } else if (this.shape === 'curve') {
             this.points.push(new Point(x, y));
             this.paint.drawPoint(this.points, this.lineWidth, this.color);
         } else if (this.shape === 'circle') {
             this.beginPoint.x = x;
             this.beginPoint.y = y;
         } else if (this.shape === 'arrow') {
+            this.beginPoint.x = x;
+            this.beginPoint.y = y;
+        } else if (this.shape === 'line') {
             this.beginPoint.x = x;
             this.beginPoint.y = y;
         }
@@ -122,7 +123,7 @@ export class YMPaint {
                 this.paint.clean();
                 this.redrawAll();
                 this.paint.drawRect(this.rect.x, this.rect.y, this.rect.width, this.rect.height, this.radius, this.color, this.lineWidth);
-            } else if (this.shape === 'line') {
+            } else if (this.shape === 'curve') {
                 this.points.push(new Point(e.clientX, e.clientY));
                 this.paint.drawPoint(this.points, this.lineWidth, this.color);
             } else if (this.shape === 'circle') {
@@ -149,6 +150,11 @@ export class YMPaint {
                 this.paint.clean();
                 this.redrawAll();
                 this.paint.drawArrow(this.beginPoint, this.stopPoint, this.color, this.range)
+            } else if (this.shape === 'line') {
+                const stopPoint = new Point(e.clientX, e.clientY);
+                this.paint.clean();
+                this.redrawAll();
+                this.paint.drawLine(this.beginPoint, stopPoint, this.color, this.lineWidth);
             }
         }
     }
@@ -165,7 +171,7 @@ export class YMPaint {
             const rect = new Rectangle(this.rect.x, this.rect.y, this.rect.width, this.rect.height, this.radius, this.color, this.lineWidth);
             this.rect = new Rectangle();
             this.history.push(rect);
-        } else if (this.shape === 'line') {
+        } else if (this.shape === 'curve') {
             const curve = new Curve(this.points, this.color, this.lineWidth);
             this.history.push(curve);
             this.points = [];
@@ -191,7 +197,12 @@ export class YMPaint {
         } else if (this.shape === 'arrow') {
             const arrow = new Arrow(this.beginPoint, new Point(e.clientX, e.clientY), this.range, this.color, this.lineWidth);
             this.history.push(arrow);
-            this.beginPoint = new Point(0, 0);
+            this.beginPoint = new Point();
+        } else if (this.shape === 'line') {
+            const stopPoint = new Point(e.clientX, e.clientY);
+            const line = new Line(this.beginPoint, stopPoint, this.color, this.lineWidth);
+            this.history.push(line);
+            this.beginPoint = new Point();
         }
         this.drawing = false;
     }
@@ -212,25 +223,22 @@ export class YMPaint {
     /**
      * 重绘历史记录中的所有元素
      * 
-     * @private
      * @memberof YMPaint
      */
-    private redrawAll() {
+    public redrawAll(): void {
         console.log('redrawAll: ', this.history);
         const self = this;
         this.history.forEach(function (item) {
             if (item instanceof Rectangle) {
-                console.log('redraw Rectangle: ', item);
                 self.paint.drawRect(item.x, item.y, item.width, item.height, item.radius, item.color, item.lineWidth);
             } else if (item instanceof Curve) {
                 self.paint.drawPoint(item.points, item.lineWidth, item.color);
-                console.log('redraw Curve: ', item);
             } else if (item instanceof Circle) {
-                console.log('redraw Circle: ', item);
                 self.paint.drawEllipse(item.x, item.y, item.a, item.b, item.lineWidth, item.color);
             } else if (item instanceof Arrow) {
-                console.log('redraw Arrow: ', item);
                 self.paint.drawArrow(item.beginPoint, item.stopPoint, item.color, item.range);
+            } else if (item instanceof Line) {
+                self.paint.drawLine(item.begin, item.end, item.color, item.lineWidth);
             }
         });
     }
@@ -271,7 +279,7 @@ export class YMPaint {
      * 
      * @memberof YMPaint
      */
-    public cleanAll() {
+    public cleanAll(): void {
         this.history = [];
         this.paint.clean();
     }

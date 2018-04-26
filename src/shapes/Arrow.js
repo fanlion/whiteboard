@@ -12,19 +12,22 @@ var __extends = (this && this.__extends) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 var ShapeBase_1 = require("./ShapeBase");
 /**
- * 曲线(自由划线)
+ * 箭头
  *
- * @class Curve
+ * @class Arrow
  * @extends {ShapeBase}
  */
-var Curve = /** @class */ (function (_super) {
-    __extends(Curve, _super);
-    function Curve(points, color, lineWidth) {
+var Arrow = /** @class */ (function (_super) {
+    __extends(Arrow, _super);
+    function Arrow(beginPoint, stopPoint, range, color, lineWidth) {
+        if (lineWidth === void 0) { lineWidth = 0; }
         var _this = _super.call(this, color, lineWidth) || this;
-        _this.points = points;
+        _this.beginPoint = beginPoint;
+        _this.stopPoint = stopPoint;
+        _this.range = range;
         return _this;
     }
-    return Curve;
+    return Arrow;
 }(ShapeBase_1.default));
-exports.default = Curve;
-//# sourceMappingURL=Curve.js.map
+exports.default = Arrow;
+//# sourceMappingURL=Arrow.js.map

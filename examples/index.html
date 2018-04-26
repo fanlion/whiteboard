@@ -29,7 +29,8 @@
     <!-- 形状选择 -->
     <select id="shapes">
       <option value="rect">矩形</option>
-      <option value="line">线段</option>
+      <option value="curve">曲线</option>
+      <option value="line">直线</option>
       <option value="circle">圆形</option>
       <option value="arrow">箭头</option>
     </select>
@@ -106,6 +107,9 @@
     }
 
     window.addEventListener('resize', handleResize, false);
+    window.addEventListener('resize', function() {
+      paint.redrawAll();
+    }, false);
   </script>
 </body>
 

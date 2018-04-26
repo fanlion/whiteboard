@@ -2,13 +2,22 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.isDebug = false;
 exports.version = '1.0.0';
+var Paint_1 = require("./Paint");
 var Point_1 = require("./shapes/Point");
 var Circle_1 = require("./shapes/Circle");
 var Rectangle_1 = require("./shapes/Rectangle");
+var Curve_1 = require("./shapes/Curve");
+var Arrow_1 = require("./shapes/Arrow");
+/**
+ * YMPaint
+ *
+ * @export
+ * @class YMPaint
+ */
 var YMPaint = /** @class */ (function () {
     function YMPaint(config) {
         this.canvas = config.canvas;
-        this.context = this.canvas.getContext('2d');
+        this.paint = new Paint_1.default(this.canvas);
         this.color = config.color || 'black';
         this.lineWidth = config.lineWidth || 2;
         this.radius = config.radius || 0;
@@ -16,16 +25,10 @@ var YMPaint = /** @class */ (function () {
         this.angle = 0;
         this.range = 25;
         this.points = [];
-        this.polygonVertex = [];
         this.beginPoint = new Point_1.default();
         this.stopPoint = new Point_1.default();
         this.rect = new Rectangle_1.default();
-        this.history = {
-            lines: [],
-            rects: [],
-            circles: [],
-            arrows: [],
-        };
+        this.history = [];
         // 绑定事件
         this.bindEvent();
     }
@@ -46,7 +49,7 @@ var YMPaint = /** @class */ (function () {
         }
         else if (this.shape === 'line') {
             this.points.push(new Point_1.default(x, y));
-            this.drawPoint(this.points, this.lineWidth, this.color);
+            this.paint.drawPoint(this.points, this.lineWidth, this.color);
         }
         else if (this.shape === 'circle') {
             this.beginPoint.x = x;
@@ -77,18 +80,18 @@ var YMPaint = /** @class */ (function () {
                     this.rect.x = this.beginPoint.x;
                 }
                 if (this.beginPoint.y > e.clientY) {
-                    this.rect.x = e.clientY;
+                    this.rect.y = e.clientY;
                 }
                 else {
                     this.rect.y = this.beginPoint.y;
                 }
-                this.clear();
+                this.paint.clean();
                 this.redrawAll();
-                this.drawRect(this.rect.x, this.rect.y, this.rect.width, this.rect.height, this.radius, this.color, this.lineWidth);
+                this.paint.drawRect(this.rect.x, this.rect.y, this.rect.width, this.rect.height, this.radius, this.color, this.lineWidth);
             }
             else if (this.shape === 'line') {
                 this.points.push(new Point_1.default(e.clientX, e.clientY));
-                this.drawPoint(this.points, this.lineWidth, this.color);
+                this.paint.drawPoint(this.points, this.lineWidth, this.color);
             }
             else if (this.shape === 'circle') {
                 var pointX = 0, pointY = 0;
@@ -106,18 +109,16 @@ var YMPaint = /** @class */ (function () {
                 }
                 var lineX = Math.abs(this.beginPoint.x - e.clientX) / 2;
                 var lineY = Math.abs(this.beginPoint.y - e.clientY) / 2;
-                this.clear();
+                this.paint.clean();
                 this.redrawAll();
-                this.drawEllipse(pointX, pointY, lineX, lineY, this.lineWidth, this.color);
+                this.paint.drawEllipse(pointX, pointY, lineX, lineY, this.lineWidth, this.color);
             }
             else if (this.shape === 'arrow') {
                 this.stopPoint.x = e.clientX;
                 this.stopPoint.y = e.clientY;
-                this.clear();
+                this.paint.clean();
                 this.redrawAll();
-                this.arrowCoord(this.beginPoint, this.stopPoint, this.range);
-                this.sideCoord();
-                this.drawArrow(this.color);
+                this.paint.drawArrow(this.beginPoint, this.stopPoint, this.color, this.range);
             }
         }
     };
@@ -130,25 +131,13 @@ var YMPaint = /** @class */ (function () {
      */
     YMPaint.prototype.handleMouseUp = function (e) {
         if (this.shape === 'rect') {
-            var rect = {
-                x: this.rect.x,
-                y: this.rect.y,
-                width: this.rect.width,
-                height: this.rect.height,
-                radius: this.radius,
-                color: this.color,
-                lineWidth: this.lineWidth
-            };
+            var rect = new Rectangle_1.default(this.rect.x, this.rect.y, this.rect.width, this.rect.height, this.radius, this.color, this.lineWidth);
             this.rect = new Rectangle_1.default();
-            this.history.rects.push(rect);
+            this.history.push(rect);
         }
         else if (this.shape === 'line') {
-            var line = {
-                points: this.points,
-                lineWidth: this.lineWidth,
-                color: this.color
-            };
-            this.history.lines.push(line);
+            var curve = new Curve_1.default(this.points, this.color, this.lineWidth);
+            this.history.push(curve);
             this.points = [];
         }
         else if (this.shape === 'circle') {
@@ -168,114 +157,15 @@ var YMPaint = /** @class */ (function () {
             var lineX = Math.abs(this.beginPoint.x - e.clientX) / 2;
             var lineY = Math.abs(this.beginPoint.y - e.clientY) / 2;
             var circle = new Circle_1.default(pointX, pointY, lineX, lineY, this.color, this.lineWidth);
-            this.history.circles.push(circle);
+            this.history.push(circle);
             this.beginPoint = new Point_1.default();
         }
         else if (this.shape === 'arrow') {
-            var arrow = {
-                beginPoint: this.beginPoint,
-                stopPoint: new Point_1.default(e.clientX, e.clientY),
-                range: this.range,
-                color: this.color
-            };
-            this.history.arrows.push(arrow);
-            this.beginPoint = new Point_1.default();
+            var arrow = new Arrow_1.default(this.beginPoint, new Point_1.default(e.clientX, e.clientY), this.range, this.color, this.lineWidth);
+            this.history.push(arrow);
+            this.beginPoint = new Point_1.default(0, 0);
         }
         this.drawing = false;
-    };
-    YMPaint.prototype.drawPoint = function (points, lineWidth, color) {
-        for (var i = 0; i < points.length; i++) {
-            this.context.beginPath();
-            if (points[i].y && i) {
-                this.context.moveTo(points[i - 1].x, points[i - 1].y);
-            }
-            else {
-                this.context.moveTo(points[i].x - 1, points[i].y);
-            }
-            this.context.lineWidth = lineWidth;
-            this.context.strokeStyle = color;
-            this.context.lineTo(points[i].x, points[i].y);
-            this.context.closePath();
-            this.context.stroke();
-        }
-    };
-    YMPaint.prototype.drawEllipse = function (x, y, a, b, lineWidth, color) {
-        this.context.beginPath();
-        this.context.ellipse(x, y, a, b, 0, 0, 2 * Math.PI);
-        this.context.lineWidth = lineWidth;
-        this.context.fillStyle = 'rgba(0, 0, 0, 0)';
-        this.context.strokeStyle = color;
-        this.context.fill();
-        this.context.stroke();
-    };
-    YMPaint.prototype.createRect = function (x, y, width, height, radius, color, type, lineWidth) {
-        this.context.beginPath();
-        this.context.moveTo(x, y + radius);
-        this.context.lineTo(x, y + height - radius);
-        this.context.quadraticCurveTo(x, y + height, x + radius, y + height);
-        this.context.lineTo(x + width - radius, y + height);
-        this.context.quadraticCurveTo(x + width, y + height, x + width, y + height - radius);
-        this.context.lineTo(x + width, y + radius);
-        this.context.quadraticCurveTo(x + width, y, x + width - radius, y);
-        this.context.lineTo(x + radius, y);
-        this.context.quadraticCurveTo(x, y, x, y + radius);
-        // @ts-ignore
-        this.context[type + 'Style'] = color;
-        this.context.lineWidth = lineWidth;
-        this.context.closePath();
-        // @ts-ignore
-        this.context[type]();
-    };
-    /**
-     * 绘制矩形
-     *
-     * @private
-     * @param {number} x
-     * @param {number} y
-     * @param {number} width
-     * @param {number} height
-     * @param {number} radius
-     * @param {string} color
-     * @param {number} lineWidth
-     * @memberof YMPaint
-     */
-    YMPaint.prototype.drawRect = function (x, y, width, height, radius, color, lineWidth) {
-        this.createRect(x, y, width, height, radius, color, 'stroke', lineWidth);
-    };
-    YMPaint.prototype.getRadian = function (beginPoint, stopPoint) {
-        this.angle = Math.atan2(stopPoint.y - beginPoint.y, stopPoint.x - beginPoint.x) / Math.PI * 180;
-    };
-    YMPaint.prototype.arrowCoord = function (beginPoint, stopPoint, range) {
-        this.polygonVertex[0] = beginPoint.x;
-        this.polygonVertex[1] = beginPoint.y;
-        this.polygonVertex[6] = stopPoint.x;
-        this.polygonVertex[7] = stopPoint.y;
-        this.getRadian(beginPoint, stopPoint);
-        this.polygonVertex[8] = stopPoint.x - YMPaint.edgeLen * Math.cos(Math.PI / 180 * (this.angle + range));
-        this.polygonVertex[9] = stopPoint.y - YMPaint.edgeLen * Math.sin(Math.PI / 180 * (this.angle + range));
-        this.polygonVertex[4] = stopPoint.x - YMPaint.edgeLen * Math.cos(Math.PI / 180 * (this.angle - range));
-        this.polygonVertex[5] = stopPoint.y - YMPaint.edgeLen * Math.sin(Math.PI / 180 * (this.angle - range));
-    };
-    YMPaint.prototype.sideCoord = function () {
-        var x = (this.polygonVertex[4] + this.polygonVertex[8]) / 2;
-        var y = (this.polygonVertex[5] + this.polygonVertex[9]) / 2;
-        var midPoint = new Point_1.default(x, y);
-        this.polygonVertex[2] = (this.polygonVertex[4] + midPoint.x) / 2;
-        this.polygonVertex[3] = (this.polygonVertex[5] + midPoint.y) / 2;
-        this.polygonVertex[10] = (this.polygonVertex[8] + midPoint.x) / 2;
-        this.polygonVertex[11] = (this.polygonVertex[9] + midPoint.y) / 2;
-    };
-    YMPaint.prototype.drawArrow = function (color) {
-        this.context.fillStyle = color;
-        this.context.beginPath();
-        this.context.moveTo(this.polygonVertex[0], this.polygonVertex[1]);
-        this.context.lineTo(this.polygonVertex[2], this.polygonVertex[3]);
-        this.context.lineTo(this.polygonVertex[4], this.polygonVertex[5]);
-        this.context.lineTo(this.polygonVertex[6], this.polygonVertex[7]);
-        this.context.lineTo(this.polygonVertex[8], this.polygonVertex[9]);
-        this.context.lineTo(this.polygonVertex[10], this.polygonVertex[11]);
-        this.context.closePath();
-        this.context.fill();
     };
     /**
      * 绑定事件
@@ -292,44 +182,25 @@ var YMPaint = /** @class */ (function () {
     /**
      * 重绘历史记录中的所有元素
      *
-     * @private
      * @memberof YMPaint
      */
     YMPaint.prototype.redrawAll = function () {
         console.log('redrawAll: ', this.history);
         var self = this;
-        if (this.history.rects.length > 0) {
-            this.history.rects.forEach(function (item) {
-                self.drawRect(item.x, item.y, item.width, item.height, item.radius, item.color, item.lineWidth);
-            });
-        }
-        if (this.history.lines.length > 0) {
-            this.history.lines.forEach(function (item) {
-                self.drawPoint(item.points, item.lineWidth, item.color);
-            });
-        }
-        if (this.history.circles.length > 0) {
-            this.history.circles.forEach(function (item) {
-                self.drawEllipse(item.x, item.y, item.a, item.b, item.lineWidth, item.color);
-            });
-        }
-        if (this.history.arrows.length > 0) {
-            this.history.arrows.forEach(function (item) {
-                // if (item != {})
-                self.arrowCoord(item.beginPoint, item.stopPoint, item.range);
-                self.sideCoord();
-                self.drawArrow(item.color);
-            });
-        }
-    };
-    /**
-     * 清空屏幕内容
-     *
-     * @private
-     * @memberof YMPaint
-     */
-    YMPaint.prototype.clear = function () {
-        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.history.forEach(function (item) {
+            if (item instanceof Rectangle_1.default) {
+                self.paint.drawRect(item.x, item.y, item.width, item.height, item.radius, item.color, item.lineWidth);
+            }
+            else if (item instanceof Curve_1.default) {
+                self.paint.drawPoint(item.points, item.lineWidth, item.color);
+            }
+            else if (item instanceof Circle_1.default) {
+                self.paint.drawEllipse(item.x, item.y, item.a, item.b, item.lineWidth, item.color);
+            }
+            else if (item instanceof Arrow_1.default) {
+                self.paint.drawArrow(item.beginPoint, item.stopPoint, item.color, item.range);
+            }
+        });
     };
     YMPaint.prototype.setColor = function (color) {
         this.color = color;
@@ -342,6 +213,29 @@ var YMPaint = /** @class */ (function () {
     };
     YMPaint.prototype.getShape = function () {
         return this.shape;
+    };
+    /**
+     * 撤销一步
+     *
+     * @memberof YMPaint
+     */
+    YMPaint.prototype.undo = function () {
+        if (this.history.length > 0) {
+            this.history.pop();
+            // 撤销后重绘
+            this.paint.clean();
+            this.redrawAll();
+            console.log('undo', this.history);
+        }
+    };
+    /**
+     * 清屏
+     *
+     * @memberof YMPaint
+     */
+    YMPaint.prototype.cleanAll = function () {
+        this.history = [];
+        this.paint.clean();
     };
     /**
      * 函数节流
@@ -363,8 +257,6 @@ var YMPaint = /** @class */ (function () {
             }
         };
     };
-    YMPaint.edgeLen = 25;
-    YMPaint.angle = 15;
     return YMPaint;
 }());
 exports.YMPaint = YMPaint;
