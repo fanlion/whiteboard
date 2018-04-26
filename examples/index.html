@@ -56,6 +56,8 @@
     
     // 初始化canvas大小
     handleResize();
+    // 获取socket.io
+    var socket = io();
 
     // 画笔配置
     var config = {
@@ -66,10 +68,16 @@
       shape: 'rect'
     };
 
+    var listeners = {
+      onDrawing: function(data) {
+        console.log('data', data);
+        socket.emit('drawing', data);
+      }
+    };
+
     // 初始画笔化实例
-    var paint = new YMPaintSDK.YMPaint(config);
-    // 获取socket.io
-    var socket = io();
+    var paint = new YMPaintSDK.YMPaint(config, listeners);
+    socket.on('drawing', paint.draw);
 
     // 添加监听函数
     for (var i = 0; i < colors.length; i++) {

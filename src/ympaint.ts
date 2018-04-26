@@ -110,11 +110,7 @@ export class YMPaint {
         } else if (this.shape === 'line') {
             this.beginPoint.x = x;
             this.beginPoint.y = y;
-        } 
-        // else if (this.shape === 'triangle') {
-        //     this.beginPoint.x = x;
-        //     this.beginPoint.y = y;
-        // }
+        }
     }
 
     /**
@@ -175,13 +171,7 @@ export class YMPaint {
                 this.paint.clean();
                 this.redrawAll();
                 this.paint.drawLine(this.beginPoint, stopPoint, this.color, this.lineWidth);
-            } 
-            // else if (this.shape === 'triangle') {
-            //     this.triangle.topPoint.y = this.beginPoint.y;
-            //     this.triangle.topPoint.x = e.clientX;
-            //     this.triangle.leftPoint.x = this.beginPoint.x;
-            //     this.triangle.leftPoint.y = e.clientY;
-            // }
+            }
         }
     }
 
@@ -198,7 +188,7 @@ export class YMPaint {
             this.rect = new Rectangle();
             this.history.push(rect);
             // 回调
-            this.listeners.onDrawing && this.listeners.onDrawing(rect);
+            this.listeners && this.listeners.onDrawing && this.listeners.onDrawing(rect);
         } else if (this.shape === 'curve') {
             const curve = new Curve(this.points, this.color, this.lineWidth);
             this.history.push(curve);
@@ -238,9 +228,6 @@ export class YMPaint {
             // 回调
             this.listeners && this.listeners.onDrawing && this.listeners.onDrawing(line);
         }
-        // else if (this.shape === 'triangle') {
-
-        // }
         this.drawing = false;
     }
 
@@ -263,21 +250,25 @@ export class YMPaint {
      * @memberof YMPaint
      */
     public redrawAll(): void {
-        console.log('redrawAll: ', this.history);
         const self = this;
         this.history.forEach(function (item) {
-            if (item instanceof Rectangle) {
-                self.paint.drawRect(item.x, item.y, item.width, item.height, item.radius, item.color, item.lineWidth);
-            } else if (item instanceof Curve) {
-                self.paint.drawPoint(item.points, item.lineWidth, item.color);
-            } else if (item instanceof Circle) {
-                self.paint.drawEllipse(item.x, item.y, item.a, item.b, item.lineWidth, item.color);
-            } else if (item instanceof Arrow) {
-                self.paint.drawArrow(item.beginPoint, item.stopPoint, item.color, item.range);
-            } else if (item instanceof Line) {
-                self.paint.drawLine(item.begin, item.end, item.color, item.lineWidth);
-            }
+            self.draw(item);
         });
+    }
+
+    public draw(item: ShapeBase): void {
+        console.log('draw', item);
+        if (item instanceof Rectangle) {
+            this.paint.drawRect(item.x, item.y, item.width, item.height, item.radius, item.color, item.lineWidth);
+        } else if (item instanceof Curve) {
+            this.paint.drawPoint(item.points, item.lineWidth, item.color);
+        } else if (item instanceof Circle) {
+            this.paint.drawEllipse(item.x, item.y, item.a, item.b, item.lineWidth, item.color);
+        } else if (item instanceof Arrow) {
+            this.paint.drawArrow(item.beginPoint, item.stopPoint, item.color, item.range);
+        } else if (item instanceof Line) {
+            this.paint.drawLine(item.begin, item.end, item.color, item.lineWidth);
+        }
     }
 
     public setColor(color: string): void {
@@ -307,7 +298,6 @@ export class YMPaint {
             // 撤销后重绘
             this.paint.clean();
             this.redrawAll();
-            console.log('undo', this.history);
         }
     }
 
