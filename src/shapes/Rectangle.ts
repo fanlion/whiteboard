@@ -1,5 +1,11 @@
 import ShapeBase from './ShapeBase';
 
+/**
+ * 矩形
+ * 
+ * @class Rectangle
+ * @extends {ShapeBase}
+ */
 class Rectangle extends ShapeBase {
   x: number;
   y: number;

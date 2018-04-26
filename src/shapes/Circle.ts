@@ -1,5 +1,11 @@
 import ShapeBase from './ShapeBase';
 
+/**
+ * 圆
+ * 
+ * @class Circle
+ * @extends {ShapeBase}
+ */
 class Circle extends ShapeBase {
     x: number;
     y: number;

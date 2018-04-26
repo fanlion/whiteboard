@@ -4,6 +4,7 @@ export var version = '1.0.0';
 import Point from './shapes/Point';
 import Circle from './shapes/Circle';
 import Rectangle from './shapes/Rectangle';
+import Curve from './shapes/Curve';
 
 
 interface Options {
@@ -15,7 +16,7 @@ interface Options {
 }
 
 interface History {
-    lines: Line[],
+    lines: Curve[],
     arrows: Arrow[],
     circles: Circle[],
     rects: Rectangle[]
@@ -25,12 +26,6 @@ interface Arrow {
     beginPoint: Point,
     stopPoint: Point,
     range: number,
-    color: string
-}
-
-interface Line {
-    points: Point[],
-    lineWidth: number,
     color: string
 }
 
@@ -52,7 +47,7 @@ export class YMPaint {
 
     private beginPoint: Point;
     private stopPoint: Point;
-    private storage: Point;
+    
     private rect: Rectangle;
     private angle: number;
     private range: number;
@@ -71,7 +66,6 @@ export class YMPaint {
 
         this.points = [];
 
-        this.storage = new Point();
         this.polygonVertex = [];
 
         this.beginPoint = new Point();
@@ -107,8 +101,8 @@ export class YMPaint {
             this.points.push(new Point(x, y));
             this.drawPoint(this.points, this.lineWidth, this.color);
         } else if (this.shape === 'circle') {
-            this.storage.x = x;
-            this.storage.y = y;
+            this.beginPoint.x = x;
+            this.beginPoint.y = y;
         } else if (this.shape === 'arrow') {
             this.beginPoint.x = x;
             this.beginPoint.y = y;
@@ -145,19 +139,19 @@ export class YMPaint {
                 this.drawPoint(this.points, this.lineWidth, this.color);
             } else if (this.shape === 'circle') {
                 let pointX = 0, pointY = 0;
-                if (this.storage.x > e.clientX) {
-                    pointX = this.storage.x - Math.abs(this.storage.x - e.clientX) / 2;
+                if (this.beginPoint.x > e.clientX) {
+                    pointX = this.beginPoint.x - Math.abs(this.beginPoint.x - e.clientX) / 2;
                 } else {
-                    pointX = Math.abs(this.storage.x - e.clientX) / 2 + this.storage.x;
+                    pointX = Math.abs(this.beginPoint.x - e.clientX) / 2 + this.beginPoint.x;
                 }
 
-                if (this.storage.y > e.clientY) {
-                    pointY = this.storage.y - Math.abs(this.storage.y - e.clientY) / 2;
+                if (this.beginPoint.y > e.clientY) {
+                    pointY = this.beginPoint.y - Math.abs(this.beginPoint.y - e.clientY) / 2;
                 } else {
-                    pointY = Math.abs(this.storage.y - e.clientY) / 2 + this.storage.y;
+                    pointY = Math.abs(this.beginPoint.y - e.clientY) / 2 + this.beginPoint.y;
                 }
-                let lineX = Math.abs(this.storage.x - e.clientX) / 2;
-                let lineY = Math.abs(this.storage.y - e.clientY) / 2;
+                let lineX = Math.abs(this.beginPoint.x - e.clientX) / 2;
+                let lineY = Math.abs(this.beginPoint.y - e.clientY) / 2;
                 this.clear();
                 this.redrawAll();
                 this.drawEllipse(pointX, pointY, lineX, lineY, this.lineWidth, this.color);
@@ -204,23 +198,23 @@ export class YMPaint {
             this.points = [];
         } else if (this.shape === 'circle') {
             let pointX = 0, pointY = 0;
-            if (this.storage.x > e.clientX) {
-                pointX = this.storage.x - Math.abs(this.storage.x - e.clientX) / 2;
+            if (this.beginPoint.x > e.clientX) {
+                pointX = this.beginPoint.x - Math.abs(this.beginPoint.x - e.clientX) / 2;
             } else {
-                pointX = Math.abs(this.storage.x - e.clientX) / 2 + this.storage.x;
+                pointX = Math.abs(this.beginPoint.x - e.clientX) / 2 + this.beginPoint.x;
             }
 
-            if (this.storage.y > e.clientY) {
-                pointY = this.storage.y - Math.abs(this.storage.y - e.clientY) / 2;
+            if (this.beginPoint.y > e.clientY) {
+                pointY = this.beginPoint.y - Math.abs(this.beginPoint.y - e.clientY) / 2;
             } else {
-                pointY = Math.abs(this.storage.y - e.clientY) / 2 + this.storage.y;
+                pointY = Math.abs(this.beginPoint.y - e.clientY) / 2 + this.beginPoint.y;
             }
-            const lineX = Math.abs(this.storage.x - e.clientX) / 2;
-            const lineY = Math.abs(this.storage.y - e.clientY) / 2;
+            const lineX = Math.abs(this.beginPoint.x - e.clientX) / 2;
+            const lineY = Math.abs(this.beginPoint.y - e.clientY) / 2;
             const circle = new Circle(pointX, pointY, lineX, lineY, this.color, this.lineWidth);
 
             this.history.circles.push(circle);
-            this.storage = new Point();
+            this.beginPoint = new Point();
         } else if (this.shape === 'arrow') {
             const arrow = {
                 beginPoint: this.beginPoint,

@@ -1,4 +1,8 @@
-
+/**
+ * 形状基础类
+ * 
+ * @class ShapeBase
+ */
 class ShapeBase {
      color: string;
      lineWidth: number;
