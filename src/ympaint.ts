@@ -115,7 +115,7 @@ export class YMPaint {
                     this.rect.x = this.beginPoint.x;
                 }
                 if (this.beginPoint.y > e.clientY) {
-                    this.rect.x = e.clientY;
+                    this.rect.y = e.clientY;
                 } else {
                     this.rect.y = this.beginPoint.y;
                 }
@@ -251,7 +251,11 @@ export class YMPaint {
         return this.shape;
     }
 
-    // 撤销
+    /**
+     * 撤销一步
+     * 
+     * @memberof YMPaint
+     */
     public undo() {
         if (this.history.length > 0) {
             this.history.pop();
@@ -260,6 +264,16 @@ export class YMPaint {
             this.redrawAll();
             console.log('undo', this.history);
         }
+    }
+
+    /**
+     * 清屏
+     * 
+     * @memberof YMPaint
+     */
+    public cleanAll() {
+        this.history = [];
+        this.paint.clean();
     }
 
     /**

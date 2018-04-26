@@ -35,6 +35,7 @@
     </select>
 
     <input type="button" id="undo" value="撤销" />
+    <input type="button" id="cleanAll" value="清屏" />
   </div>
 
   <!-- demo dependency -->
@@ -49,6 +50,7 @@
     var colors = document.getElementsByClassName('color');
     var shapes = document.getElementById('shapes');
     var undo = document.getElementById('undo');
+    var cleanAll = document.getElementById('cleanAll');
     
     // 初始化canvas大小
     handleResize();
@@ -71,11 +73,17 @@
     }
     shapes.addEventListener('change', handleUpdateShape, false);
     undo.addEventListener('click', handleUndo, false);
+    cleanAll.addEventListener('click', handleCleanAll, false);
     
     // 画笔颜色改变监听函数
     function hanlleUpdateColor(e) {
       var color = e.target.className.split(' ')[1];
       paint.setColor(color);
+    }
+
+    // 清屏处理函数
+    function handleCleanAll() {
+      paint.cleanAll();
     }
 
     // 画笔形状改变监听函数
