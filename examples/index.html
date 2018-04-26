@@ -33,6 +33,7 @@
       <option value="line">直线</option>
       <option value="circle">圆形</option>
       <option value="arrow">箭头</option>
+      <option value="triangle">三角形</option>
     </select>
 
     <input type="button" id="undo" value="撤销" />
@@ -40,7 +41,7 @@
   </div>
 
   <!-- demo dependency -->
-  <!-- <script src="https://cdn.bootcss.com/socket.io/2.1.0/socket.io.js"></script> -->
+  <script src="https://cdn.bootcss.com/socket.io/2.1.0/socket.io.js"></script>
   <!-- <script src="https://cdn.bootcss.com/jquery/1.12.4/jquery.min.js"></script> -->
   <!-- <script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script> -->
 
@@ -67,6 +68,8 @@
 
     // 初始画笔化实例
     var paint = new YMPaintSDK.YMPaint(config);
+    // 获取socket.io
+    var socket = io();
 
     // 添加监听函数
     for (var i = 0; i < colors.length; i++) {

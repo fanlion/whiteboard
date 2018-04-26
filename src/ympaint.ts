@@ -9,6 +9,7 @@ import Curve from './shapes/Curve';
 import Arrow from './shapes/Arrow';
 import ShapeBase from './shapes/ShapeBase';
 import Line from './shapes/Line';
+import Triangle from './shapes/Triangle';
 
 interface Options {
     canvas: HTMLCanvasElement,
@@ -16,6 +17,10 @@ interface Options {
     lineWidth?: number,
     radius?: number,
     shape?: string
+}
+
+interface Listeners {
+    onDrawing(data: ShapeBase): void;
 }
 
 /**
@@ -27,7 +32,9 @@ interface Options {
 export class YMPaint {
     private canvas: HTMLCanvasElement;
     private paint: Paint;
+    private listeners: Listeners;
 
+    // 画笔属性
     private color: string;      // 画笔颜色
     private lineWidth: number;
     private shape: string;
@@ -35,19 +42,28 @@ export class YMPaint {
 
     private drawing: boolean;  // 当前是否正在绘画
 
-    private points: Point[];
+    // 鼠标start事件坐标点
     private beginPoint: Point;
+    // 鼠标end事件坐标点
     private stopPoint: Point;
+
+    // 临时曲线，绘图时需要
+    private points: Point[];
+    // 临时矩形，绘图时需要
     private rect: Rectangle;
+    // 临时三角形，绘图时需要
+    private triangle: Triangle;
 
     private angle: number;
     private range: number;
 
     private history: ShapeBase[]
 
-    constructor(config: Options) {
+    constructor(config: Options, listeners: Listeners) {
         this.canvas = config.canvas;
         this.paint = new Paint(this.canvas);
+        this.listeners = listeners;
+
         this.color = config.color || 'black';
         this.lineWidth = config.lineWidth || 2;
         this.radius = config.radius || 0;
@@ -55,13 +71,13 @@ export class YMPaint {
 
         this.angle = 0;
         this.range = 25;
-
-        this.points = [];
-
         this.beginPoint = new Point();
         this.stopPoint = new Point();
 
         this.rect = new Rectangle();
+        this.triangle = new Triangle();
+        this.points = [];
+
         this.history = [];
 
         // 绑定事件
@@ -94,7 +110,11 @@ export class YMPaint {
         } else if (this.shape === 'line') {
             this.beginPoint.x = x;
             this.beginPoint.y = y;
-        }
+        } 
+        // else if (this.shape === 'triangle') {
+        //     this.beginPoint.x = x;
+        //     this.beginPoint.y = y;
+        // }
     }
 
     /**
@@ -155,7 +175,13 @@ export class YMPaint {
                 this.paint.clean();
                 this.redrawAll();
                 this.paint.drawLine(this.beginPoint, stopPoint, this.color, this.lineWidth);
-            }
+            } 
+            // else if (this.shape === 'triangle') {
+            //     this.triangle.topPoint.y = this.beginPoint.y;
+            //     this.triangle.topPoint.x = e.clientX;
+            //     this.triangle.leftPoint.x = this.beginPoint.x;
+            //     this.triangle.leftPoint.y = e.clientY;
+            // }
         }
     }
 
@@ -171,10 +197,14 @@ export class YMPaint {
             const rect = new Rectangle(this.rect.x, this.rect.y, this.rect.width, this.rect.height, this.radius, this.color, this.lineWidth);
             this.rect = new Rectangle();
             this.history.push(rect);
+            // 回调
+            this.listeners.onDrawing && this.listeners.onDrawing(rect);
         } else if (this.shape === 'curve') {
             const curve = new Curve(this.points, this.color, this.lineWidth);
             this.history.push(curve);
             this.points = [];
+            // 回调
+            this.listeners && this.listeners.onDrawing && this.listeners.onDrawing(curve);
         } else if (this.shape === 'circle') {
             let pointX = 0, pointY = 0;
             if (this.beginPoint.x > e.clientX) {
@@ -194,6 +224,8 @@ export class YMPaint {
 
             this.history.push(circle);
             this.beginPoint = new Point();
+            // 回调
+            this.listeners && this.listeners.onDrawing && this.listeners.onDrawing(circle);
         } else if (this.shape === 'arrow') {
             const arrow = new Arrow(this.beginPoint, new Point(e.clientX, e.clientY), this.range, this.color, this.lineWidth);
             this.history.push(arrow);
@@ -203,7 +235,12 @@ export class YMPaint {
             const line = new Line(this.beginPoint, stopPoint, this.color, this.lineWidth);
             this.history.push(line);
             this.beginPoint = new Point();
+            // 回调
+            this.listeners && this.listeners.onDrawing && this.listeners.onDrawing(line);
         }
+        // else if (this.shape === 'triangle') {
+
+        // }
         this.drawing = false;
     }
 

@@ -2,7 +2,10 @@
   "name": "ym-webrtc-tencent",
   "version": "1.0.0",
   "private": true,
-  "dependencies": {},
+  "dependencies": {
+    "express": "^4.16.3",
+    "socket.io": "^2.1.0"
+  },
   "devDependencies": {
     "clean-webpack-plugin": "^0.1.19",
     "copy-webpack-plugin": "^4.5.1",
@@ -16,6 +19,7 @@
   "scripts": {
     "test": "tsc -w && webpack -w && live-server --watch=src,dist",
     "dev": "webpack --config webpack.config.dev.js --watch --progress --color",
-    "build": "tsc && webpack --config webpack.config.prod.js --progress --color"
+    "build": "tsc && webpack --config webpack.config.prod.js --progress --color",
+    "server": "node app.js"
   }
 }

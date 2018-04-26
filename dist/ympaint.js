@@ -8,6 +8,8 @@ var Circle_1 = require("./shapes/Circle");
 var Rectangle_1 = require("./shapes/Rectangle");
 var Curve_1 = require("./shapes/Curve");
 var Arrow_1 = require("./shapes/Arrow");
+var Line_1 = require("./shapes/Line");
+var Triangle_1 = require("./shapes/Triangle");
 /**
  * YMPaint
  *
@@ -15,19 +17,21 @@ var Arrow_1 = require("./shapes/Arrow");
  * @class YMPaint
  */
 var YMPaint = /** @class */ (function () {
-    function YMPaint(config) {
+    function YMPaint(config, listeners) {
         this.canvas = config.canvas;
         this.paint = new Paint_1.default(this.canvas);
+        this.listeners = listeners;
         this.color = config.color || 'black';
         this.lineWidth = config.lineWidth || 2;
         this.radius = config.radius || 0;
         this.shape = config.shape || 'line';
         this.angle = 0;
         this.range = 25;
-        this.points = [];
         this.beginPoint = new Point_1.default();
         this.stopPoint = new Point_1.default();
         this.rect = new Rectangle_1.default();
+        this.triangle = new Triangle_1.default();
+        this.points = [];
         this.history = [];
         // 绑定事件
         this.bindEvent();
@@ -47,7 +51,7 @@ var YMPaint = /** @class */ (function () {
             this.beginPoint.x = x;
             this.beginPoint.y = y;
         }
-        else if (this.shape === 'line') {
+        else if (this.shape === 'curve') {
             this.points.push(new Point_1.default(x, y));
             this.paint.drawPoint(this.points, this.lineWidth, this.color);
         }
@@ -56,6 +60,14 @@ var YMPaint = /** @class */ (function () {
             this.beginPoint.y = y;
         }
         else if (this.shape === 'arrow') {
+            this.beginPoint.x = x;
+            this.beginPoint.y = y;
+        }
+        else if (this.shape === 'line') {
+            this.beginPoint.x = x;
+            this.beginPoint.y = y;
+        }
+        else if (this.shape === 'triangle') {
             this.beginPoint.x = x;
             this.beginPoint.y = y;
         }
@@ -89,7 +101,7 @@ var YMPaint = /** @class */ (function () {
                 this.redrawAll();
                 this.paint.drawRect(this.rect.x, this.rect.y, this.rect.width, this.rect.height, this.radius, this.color, this.lineWidth);
             }
-            else if (this.shape === 'line') {
+            else if (this.shape === 'curve') {
                 this.points.push(new Point_1.default(e.clientX, e.clientY));
                 this.paint.drawPoint(this.points, this.lineWidth, this.color);
             }
@@ -120,6 +132,18 @@ var YMPaint = /** @class */ (function () {
                 this.redrawAll();
                 this.paint.drawArrow(this.beginPoint, this.stopPoint, this.color, this.range);
             }
+            else if (this.shape === 'line') {
+                var stopPoint = new Point_1.default(e.clientX, e.clientY);
+                this.paint.clean();
+                this.redrawAll();
+                this.paint.drawLine(this.beginPoint, stopPoint, this.color, this.lineWidth);
+            }
+            else if (this.shape === 'triangle') {
+                this.triangle.topPoint.y = this.beginPoint.y;
+                this.triangle.topPoint.x = e.clientX;
+                this.triangle.leftPoint.x = this.beginPoint.x;
+                this.triangle.leftPoint.y = e.clientY;
+            }
         }
     };
     /**
@@ -134,11 +158,15 @@ var YMPaint = /** @class */ (function () {
             var rect = new Rectangle_1.default(this.rect.x, this.rect.y, this.rect.width, this.rect.height, this.radius, this.color, this.lineWidth);
             this.rect = new Rectangle_1.default();
             this.history.push(rect);
+            // 回调
+            this.listeners.onDrawing && this.listeners.onDrawing(rect);
         }
-        else if (this.shape === 'line') {
+        else if (this.shape === 'curve') {
             var curve = new Curve_1.default(this.points, this.color, this.lineWidth);
             this.history.push(curve);
             this.points = [];
+            // 回调
+            this.listeners && this.listeners.onDrawing && this.listeners.onDrawing(curve);
         }
         else if (this.shape === 'circle') {
             var pointX = 0, pointY = 0;
@@ -159,11 +187,23 @@ var YMPaint = /** @class */ (function () {
             var circle = new Circle_1.default(pointX, pointY, lineX, lineY, this.color, this.lineWidth);
             this.history.push(circle);
             this.beginPoint = new Point_1.default();
+            // 回调
+            this.listeners && this.listeners.onDrawing && this.listeners.onDrawing(circle);
         }
         else if (this.shape === 'arrow') {
             var arrow = new Arrow_1.default(this.beginPoint, new Point_1.default(e.clientX, e.clientY), this.range, this.color, this.lineWidth);
             this.history.push(arrow);
-            this.beginPoint = new Point_1.default(0, 0);
+            this.beginPoint = new Point_1.default();
+        }
+        else if (this.shape === 'line') {
+            var stopPoint = new Point_1.default(e.clientX, e.clientY);
+            var line = new Line_1.default(this.beginPoint, stopPoint, this.color, this.lineWidth);
+            this.history.push(line);
+            this.beginPoint = new Point_1.default();
+            // 回调
+            this.listeners && this.listeners.onDrawing && this.listeners.onDrawing(line);
+        }
+        else if (this.shape === 'triangle') {
         }
         this.drawing = false;
     };
@@ -199,6 +239,9 @@ var YMPaint = /** @class */ (function () {
             }
             else if (item instanceof Arrow_1.default) {
                 self.paint.drawArrow(item.beginPoint, item.stopPoint, item.color, item.range);
+            }
+            else if (item instanceof Line_1.default) {
+                self.paint.drawLine(item.begin, item.end, item.color, item.lineWidth);
             }
         });
     };

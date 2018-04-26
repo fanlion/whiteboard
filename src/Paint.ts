@@ -169,6 +169,29 @@ class Paint {
         this.context.stroke();
     }
 
+    /**
+     * 画三角形
+     * 
+     * @param {Point} top 
+     * @param {Point} left 
+     * @param {Point} right 
+     * @param {string} color 
+     * @param {number} lineWidth 
+     * @memberof Paint
+     */
+    public drawTriangle(top: Point, left: Point, right: Point, color: string, lineWidth: number): void {
+        this.context.beginPath();
+        this.context.strokeStyle = color;
+        this.context.lineWidth = lineWidth;
+        this.context.moveTo(top.x, top.y);
+        this.context.lineTo(right.x, right.y);
+        this.context.lineTo(left.x, left.y);
+        this.context.closePath();
+    }
+
+    public drawTriangle2(beginPoint: Point, stopPoint: Point): void {
+    }
+
 
     /**
      * 清空画板
