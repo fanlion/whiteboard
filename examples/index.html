@@ -33,6 +33,8 @@
       <option value="circle">圆形</option>
       <option value="arrow">箭头</option>
     </select>
+
+    <input type="button" id="undo" value="撤销" />
   </div>
 
   <!-- demo dependency -->
@@ -46,6 +48,7 @@
     var canvas = document.getElementsByClassName('whiteboard')[0];
     var colors = document.getElementsByClassName('color');
     var shapes = document.getElementById('shapes');
+    var undo = document.getElementById('undo');
     
     // 初始化canvas大小
     handleResize();
@@ -67,6 +70,7 @@
       colors[i].addEventListener('click', hanlleUpdateColor, false);
     }
     shapes.addEventListener('change', handleUpdateShape, false);
+    undo.addEventListener('click', handleUndo, false);
     
     // 画笔颜色改变监听函数
     function hanlleUpdateColor(e) {
@@ -86,6 +90,11 @@
     function handleResize(e) {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
+    }
+
+    // 撤销按钮监听器
+    function handleUndo() {
+      paint.undo();
     }
 
     window.addEventListener('resize', handleResize, false);

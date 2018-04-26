@@ -6,6 +6,9 @@ import Point from './shapes/Point';
 import Circle from './shapes/Circle';
 import Rectangle from './shapes/Rectangle';
 import Curve from './shapes/Curve';
+import Arrow from './shapes/Arrow';
+import ShapeBase from './shapes/ShapeBase';
+// import Line from './shapes/Line';
 
 
 interface Options {
@@ -16,56 +19,42 @@ interface Options {
     shape?: string
 }
 
-interface History {
-    lines: Curve[],
-    arrows: Arrow[],
-    circles: Circle[],
-    rects: Rectangle[]
-}
-
-interface Arrow {
-    beginPoint: Point,
-    stopPoint: Point,
-    range: number,
-    color: string
-}
-
+/**
+ * YMPaint
+ * 
+ * @export
+ * @class YMPaint
+ */
 export class YMPaint {
-    static edgeLen: number = 25;
-    static angle: number = 15;
-
     private canvas: HTMLCanvasElement;
-    private context: CanvasRenderingContext2D;
     private paint: Paint;
 
-    private color: string;
+    private color: string;      // 画笔颜色
     private lineWidth: number;
     private shape: string;
     private radius: number;
 
-    private drawing: boolean;
+    private drawing: boolean;  // 当前是否正在绘画
 
     private points: Point[];
-
     private beginPoint: Point;
     private stopPoint: Point;
-    
     private rect: Rectangle;
+
     private angle: number;
     private range: number;
-    private history: History;
+
+    // private history: History;
+    private history: ShapeBase[]
 
     constructor(config: Options) {
         this.canvas = config.canvas;
-        this.context = this.canvas.getContext('2d');
-
-        // 画笔
         this.paint = new Paint(this.canvas);
-
         this.color = config.color || 'black';
         this.lineWidth = config.lineWidth || 2;
         this.radius = config.radius || 0;
         this.shape = config.shape || 'line';
+
         this.angle = 0;
         this.range = 25;
 
@@ -75,12 +64,7 @@ export class YMPaint {
         this.stopPoint = new Point();
 
         this.rect = new Rectangle();
-        this.history = {
-            lines: [],
-            rects: [],
-            circles: [],
-            arrows: [],
-        }
+        this.history = [];
 
         // 绑定事件
         this.bindEvent();
@@ -178,25 +162,12 @@ export class YMPaint {
      */
     private handleMouseUp(e: MouseEvent): void {
         if (this.shape === 'rect') {
-            const rect = {
-                x: this.rect.x,
-                y: this.rect.y,
-                width: this.rect.width,
-                height: this.rect.height,
-                radius: this.radius,
-                color: this.color,
-                lineWidth: this.lineWidth
-            };
-
+            const rect = new Rectangle(this.rect.x, this.rect.y, this.rect.width, this.rect.height, this.radius, this.color, this.lineWidth);
             this.rect = new Rectangle();
-            this.history.rects.push(rect);
+            this.history.push(rect);
         } else if (this.shape === 'line') {
-            const line = {
-                points: this.points,
-                lineWidth: this.lineWidth,
-                color: this.color
-            };
-            this.history.lines.push(line);
+            const curve = new Curve(this.points, this.color, this.lineWidth);
+            this.history.push(curve);
             this.points = [];
         } else if (this.shape === 'circle') {
             let pointX = 0, pointY = 0;
@@ -215,16 +186,11 @@ export class YMPaint {
             const lineY = Math.abs(this.beginPoint.y - e.clientY) / 2;
             const circle = new Circle(pointX, pointY, lineX, lineY, this.color, this.lineWidth);
 
-            this.history.circles.push(circle);
+            this.history.push(circle);
             this.beginPoint = new Point();
         } else if (this.shape === 'arrow') {
-            const arrow = {
-                beginPoint: this.beginPoint,
-                stopPoint: new Point(e.clientX, e.clientY),
-                range: this.range,
-                color: this.color
-            };
-            this.history.arrows.push(arrow);
+            const arrow = new Arrow(this.beginPoint, new Point(e.clientX, e.clientY), this.range, this.color, this.lineWidth);
+            this.history.push(arrow);
             this.beginPoint = new Point(0, 0);
         }
         this.drawing = false;
@@ -252,29 +218,21 @@ export class YMPaint {
     private redrawAll() {
         console.log('redrawAll: ', this.history);
         const self = this;
-        if (this.history.rects.length > 0) {
-            this.history.rects.forEach(function (item) {
+        this.history.forEach(function (item) {
+            if (item instanceof Rectangle) {
+                console.log('redraw Rectangle: ', item);
                 self.paint.drawRect(item.x, item.y, item.width, item.height, item.radius, item.color, item.lineWidth);
-            });
-        }
-
-        if (this.history.lines.length > 0) {
-            this.history.lines.forEach(function (item) {
+            } else if (item instanceof Curve) {
                 self.paint.drawPoint(item.points, item.lineWidth, item.color);
-            });
-        }
-
-        if (this.history.circles.length > 0) {
-            this.history.circles.forEach(function (item) {
+                console.log('redraw Curve: ', item);
+            } else if (item instanceof Circle) {
+                console.log('redraw Circle: ', item);
                 self.paint.drawEllipse(item.x, item.y, item.a, item.b, item.lineWidth, item.color);
-            });
-        }
-
-        if (this.history.arrows.length > 0) {
-            this.history.arrows.forEach(function (item) {
+            } else if (item instanceof Arrow) {
+                console.log('redraw Arrow: ', item);
                 self.paint.drawArrow(item.beginPoint, item.stopPoint, item.color, item.range);
-            });
-        }
+            }
+        });
     }
 
     public setColor(color: string): void {
@@ -291,6 +249,17 @@ export class YMPaint {
 
     public getShape(): string {
         return this.shape;
+    }
+
+    // 撤销
+    public undo() {
+        if (this.history.length > 0) {
+            this.history.pop();
+            // 撤销后重绘
+            this.paint.clean();
+            this.redrawAll();
+            console.log('undo', this.history);
+        }
     }
 
     /**

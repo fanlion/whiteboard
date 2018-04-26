@@ -9,6 +9,11 @@ import Point from './Point';
  */
 class Curve extends ShapeBase {
     points: Point[];
+
+    constructor(points: Point[], color: string, lineWidth: number) {
+        super(color, lineWidth);
+        this.points = points;
+    }
 }
 
 export default Curve;
