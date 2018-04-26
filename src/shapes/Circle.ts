@@ -1,4 +1,5 @@
 import ShapeBase from './ShapeBase';
+import { ShapeType } from './Types';
 
 /**
  * 圆
@@ -13,7 +14,7 @@ class Circle extends ShapeBase {
     b: number;
 
     constructor(x: number, y: number, a: number, b: number, color: string, lineWidth: number) {
-      super(color, lineWidth);
+      super(color, lineWidth, ShapeType.Circle);
       this.x = x;
       this.y = y;
       this.a = a;

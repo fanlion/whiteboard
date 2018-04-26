@@ -10,6 +10,7 @@ import Arrow from './shapes/Arrow';
 import ShapeBase from './shapes/ShapeBase';
 import Line from './shapes/Line';
 import Triangle from './shapes/Triangle';
+import { ShapeType } from './shapes/Types';
 
 interface Options {
     canvas: HTMLCanvasElement,
@@ -122,7 +123,7 @@ export class YMPaint {
      */
     private handleMouseMove(e: MouseEvent): void {
         if (this.drawing) {
-            if (this.shape === 'rect') {
+            if (this.shape === ShapeType.Rectangle) {
                 this.rect.width = Math.abs(this.beginPoint.x - e.clientX);
                 this.rect.height = Math.abs(this.beginPoint.y - e.clientY);
                 // 确定正确的矩形左上角坐标
@@ -139,10 +140,10 @@ export class YMPaint {
                 this.paint.clean();
                 this.redrawAll();
                 this.paint.drawRect(this.rect.x, this.rect.y, this.rect.width, this.rect.height, this.radius, this.color, this.lineWidth);
-            } else if (this.shape === 'curve') {
+            } else if (this.shape === ShapeType.Curve) {
                 this.points.push(new Point(e.clientX, e.clientY));
                 this.paint.drawPoint(this.points, this.lineWidth, this.color);
-            } else if (this.shape === 'circle') {
+            } else if (this.shape === ShapeType.Circle) {
                 let pointX = 0, pointY = 0;
                 if (this.beginPoint.x > e.clientX) {
                     pointX = this.beginPoint.x - Math.abs(this.beginPoint.x - e.clientX) / 2;
@@ -160,13 +161,13 @@ export class YMPaint {
                 this.paint.clean();
                 this.redrawAll();
                 this.paint.drawEllipse(pointX, pointY, lineX, lineY, this.lineWidth, this.color);
-            } else if (this.shape === 'arrow') {
+            } else if (this.shape === ShapeType.Arrow) {
                 this.stopPoint.x = e.clientX;
                 this.stopPoint.y = e.clientY;
                 this.paint.clean();
                 this.redrawAll();
                 this.paint.drawArrow(this.beginPoint, this.stopPoint, this.color, this.range)
-            } else if (this.shape === 'line') {
+            } else if (this.shape === ShapeType.Line) {
                 const stopPoint = new Point(e.clientX, e.clientY);
                 this.paint.clean();
                 this.redrawAll();
@@ -183,19 +184,19 @@ export class YMPaint {
      * @memberof YMPaint
      */
     private handleMouseUp(e: MouseEvent): void {
-        if (this.shape === 'rect') {
+        if (this.shape === ShapeType.Rectangle) {
             const rect = new Rectangle(this.rect.x, this.rect.y, this.rect.width, this.rect.height, this.radius, this.color, this.lineWidth);
             this.rect = new Rectangle();
             this.history.push(rect);
             // 回调
             this.listeners && this.listeners.onDrawing && this.listeners.onDrawing(rect);
-        } else if (this.shape === 'curve') {
+        } else if (this.shape === ShapeType.Curve) {
             const curve = new Curve(this.points, this.color, this.lineWidth);
             this.history.push(curve);
             this.points = [];
             // 回调
             this.listeners && this.listeners.onDrawing && this.listeners.onDrawing(curve);
-        } else if (this.shape === 'circle') {
+        } else if (this.shape === ShapeType.Circle) {
             let pointX = 0, pointY = 0;
             if (this.beginPoint.x > e.clientX) {
                 pointX = this.beginPoint.x - Math.abs(this.beginPoint.x - e.clientX) / 2;
@@ -216,11 +217,13 @@ export class YMPaint {
             this.beginPoint = new Point();
             // 回调
             this.listeners && this.listeners.onDrawing && this.listeners.onDrawing(circle);
-        } else if (this.shape === 'arrow') {
+        } else if (this.shape === ShapeType.Arrow) {
             const arrow = new Arrow(this.beginPoint, new Point(e.clientX, e.clientY), this.range, this.color, this.lineWidth);
             this.history.push(arrow);
             this.beginPoint = new Point();
-        } else if (this.shape === 'line') {
+            // 回调
+            this.listeners && this.listeners.onDrawing && this.listeners.onDrawing(arrow);
+        } else if (this.shape === ShapeType.Line) {
             const stopPoint = new Point(e.clientX, e.clientY);
             const line = new Line(this.beginPoint, stopPoint, this.color, this.lineWidth);
             this.history.push(line);
@@ -257,16 +260,21 @@ export class YMPaint {
     }
 
     public draw(item: ShapeBase): void {
-        console.log('draw', item);
-        if (item instanceof Rectangle) {
+        if (item.type === ShapeType.Rectangle) {
+            // @ts-ignore
             this.paint.drawRect(item.x, item.y, item.width, item.height, item.radius, item.color, item.lineWidth);
-        } else if (item instanceof Curve) {
+        } else if (item.type === ShapeType.Curve) {
+            // @ts-ignore
             this.paint.drawPoint(item.points, item.lineWidth, item.color);
-        } else if (item instanceof Circle) {
+        } else if (item.type === ShapeType.Circle) {
+            // @ts-ignore
             this.paint.drawEllipse(item.x, item.y, item.a, item.b, item.lineWidth, item.color);
-        } else if (item instanceof Arrow) {
+        } else if (item.type === ShapeType.Arrow) {
+            console.log('浏览器绘画', item);
+            // @ts-ignore
             this.paint.drawArrow(item.beginPoint, item.stopPoint, item.color, item.range);
-        } else if (item instanceof Line) {
+        } else if (item.type === ShapeType.Line) {
+            // @ts-ignore
             this.paint.drawLine(item.begin, item.end, item.color, item.lineWidth);
         }
     }
@@ -331,4 +339,8 @@ export class YMPaint {
             }
         }
     }
+}
+
+export {
+    ShapeType
 }

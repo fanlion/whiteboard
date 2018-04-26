@@ -1,5 +1,6 @@
 import ShapeBase from './ShapeBase';
 import Point from './Point';
+import { ShapeType } from './Types';
 
 
 /**
@@ -14,7 +15,7 @@ class Triangle extends ShapeBase {
     rightPoint: Point;
 
     constructor(top: Point = new Point(), left: Point = new Point(), right: Point = new Point(), color: string = '', lineWidth: number = 0) {
-        super(color, lineWidth);
+        super(color, lineWidth, ShapeType.Triangle);
         this.topPoint = top;
         this.leftPoint = left;
         this.rightPoint = right;

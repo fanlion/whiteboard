@@ -1,4 +1,5 @@
 import ShapeBase from './ShapeBase';
+import { ShapeType } from './Types';
 
 /**
  * 矩形
@@ -14,7 +15,7 @@ class Rectangle extends ShapeBase {
   radius: number;
 
   constructor(x: number = 0, y: number = 0, width: number = 0, height: number = 0, radius: number = 0, color: string = '', lineWidth: number = 0) {
-    super(color, lineWidth);
+    super(color, lineWidth, ShapeType.Rectangle);
     this.x = x;
     this.y = y;
     this.width = width;

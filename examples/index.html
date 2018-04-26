@@ -77,7 +77,11 @@
 
     // 初始画笔化实例
     var paint = new YMPaintSDK.YMPaint(config, listeners);
-    socket.on('drawing', paint.draw);
+    socket.on('drawing', handleDrawingEvent);
+
+    function handleDrawingEvent(data) {
+      paint.draw(data);
+    }
 
     // 添加监听函数
     for (var i = 0; i < colors.length; i++) {
@@ -103,6 +107,7 @@
       var options = e.target.options;
       var index = e.target.selectedIndex;
       var shape = options[index].value;
+      console.log(shape);
       paint.setShape(shape);
     }
 

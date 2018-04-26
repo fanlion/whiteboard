@@ -1,5 +1,6 @@
 import ShapeBase from './ShapeBase';
 import Point from './Point';
+import { ShapeType } from './Types';
 
 /**
  * 直线
@@ -12,7 +13,7 @@ class Line extends ShapeBase{
     end: Point;
 
     constructor(begin: Point, end: Point, color: string, lineWidth: number) {
-        super(color, lineWidth);
+        super(color, lineWidth, ShapeType.Line);
         this.begin = begin;
         this.end = end;
     }
