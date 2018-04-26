@@ -2,31 +2,9 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.isDebug = false;
 exports.version = '1.0.0';
-var Point = /** @class */ (function () {
-    function Point(x, y) {
-        if (x === void 0) { x = 0; }
-        if (y === void 0) { y = 0; }
-        this.x = x;
-        this.y = y;
-    }
-    Point.prototype.setXY = function (x, y) {
-        this.x = x;
-        this.y = y;
-    };
-    Point.prototype.getX = function () {
-        return this.x;
-    };
-    Point.prototype.setX = function (x) {
-        this.x = x;
-    };
-    Point.prototype.getY = function () {
-        return this.y;
-    };
-    Point.prototype.setY = function (y) {
-        this.y = y;
-    };
-    return Point;
-}());
+var Point_1 = require("./shapes/Point");
+var Circle_1 = require("./shapes/Circle");
+var Rectangle_1 = require("./shapes/Rectangle");
 var YMPaint = /** @class */ (function () {
     function YMPaint(config) {
         this.canvas = config.canvas;
@@ -38,11 +16,10 @@ var YMPaint = /** @class */ (function () {
         this.angle = 0;
         this.range = 25;
         this.points = [];
-        this.storage = new Point();
         this.polygonVertex = [];
-        this.beginPoint = new Point();
-        this.stopPoint = new Point();
-        this.rect = {};
+        this.beginPoint = new Point_1.default();
+        this.stopPoint = new Point_1.default();
+        this.rect = new Rectangle_1.default();
         this.history = {
             lines: [],
             rects: [],
@@ -51,8 +28,6 @@ var YMPaint = /** @class */ (function () {
         };
         // 绑定事件
         this.bindEvent();
-        // 设置canvas尺寸为浏览器大小
-        this.resize();
     }
     /**
      * 鼠标mousedown事件处理器
@@ -66,18 +41,20 @@ var YMPaint = /** @class */ (function () {
         var y = e.clientY;
         this.drawing = true;
         if (this.shape === 'rect') {
-            this.rect.x = x;
-            this.rect.y = y;
+            this.beginPoint.x = x;
+            this.beginPoint.y = y;
         }
         else if (this.shape === 'line') {
-            this.movePoint(x, y);
+            this.points.push(new Point_1.default(x, y));
             this.drawPoint(this.points, this.lineWidth, this.color);
         }
         else if (this.shape === 'circle') {
-            this.storage.setXY(x, y);
+            this.beginPoint.x = x;
+            this.beginPoint.y = y;
         }
         else if (this.shape === 'arrow') {
-            this.beginPoint.setXY(x, y);
+            this.beginPoint.x = x;
+            this.beginPoint.y = y;
         }
     };
     /**
@@ -90,50 +67,52 @@ var YMPaint = /** @class */ (function () {
     YMPaint.prototype.handleMouseMove = function (e) {
         if (this.drawing) {
             if (this.shape === 'rect') {
-                this.rect.width = Math.abs(this.rect.x - e.clientX);
-                this.rect.height = Math.abs(this.rect.y - e.clientY);
-                if (this.rect.x > e.clientX) {
-                    this.rect.realX = e.clientX;
+                this.rect.width = Math.abs(this.beginPoint.x - e.clientX);
+                this.rect.height = Math.abs(this.beginPoint.y - e.clientY);
+                // 确定正确的矩形左上角坐标
+                if (this.beginPoint.x > e.clientX) {
+                    this.rect.x = e.clientX;
                 }
                 else {
-                    this.rect.realX = this.rect.x;
+                    this.rect.x = this.beginPoint.x;
                 }
-                if (this.rect.y > e.clientY) {
-                    this.rect.realY = e.clientY;
+                if (this.beginPoint.y > e.clientY) {
+                    this.rect.x = e.clientY;
                 }
                 else {
-                    this.rect.realY = this.rect.y;
+                    this.rect.y = this.beginPoint.y;
                 }
                 this.clear();
                 this.redrawAll();
-                this.drawRect(this.rect.realX, this.rect.realY, this.rect.width, this.rect.height, this.radius, this.color, this.lineWidth);
+                this.drawRect(this.rect.x, this.rect.y, this.rect.width, this.rect.height, this.radius, this.color, this.lineWidth);
             }
             else if (this.shape === 'line') {
-                this.movePoint(e.clientX, e.clientY);
+                this.points.push(new Point_1.default(e.clientX, e.clientY));
                 this.drawPoint(this.points, this.lineWidth, this.color);
             }
             else if (this.shape === 'circle') {
                 var pointX = 0, pointY = 0;
-                if (this.storage.getX() > e.clientX) {
-                    pointX = this.storage.getX() - Math.abs(this.storage.getX() - e.clientX) / 2;
+                if (this.beginPoint.x > e.clientX) {
+                    pointX = this.beginPoint.x - Math.abs(this.beginPoint.x - e.clientX) / 2;
                 }
                 else {
-                    pointX = Math.abs(this.storage.getX() - e.clientX) / 2 + this.storage.getX();
+                    pointX = Math.abs(this.beginPoint.x - e.clientX) / 2 + this.beginPoint.x;
                 }
-                if (this.storage.getY() > e.clientY) {
-                    pointY = this.storage.getY() - Math.abs(this.storage.getY() - e.clientY) / 2;
+                if (this.beginPoint.y > e.clientY) {
+                    pointY = this.beginPoint.y - Math.abs(this.beginPoint.y - e.clientY) / 2;
                 }
                 else {
-                    pointY = Math.abs(this.storage.getY() - e.clientY) / 2 + this.storage.getY();
+                    pointY = Math.abs(this.beginPoint.y - e.clientY) / 2 + this.beginPoint.y;
                 }
-                var lineX = Math.abs(this.storage.getX() - e.clientX) / 2;
-                var lineY = Math.abs(this.storage.getY() - e.clientY) / 2;
+                var lineX = Math.abs(this.beginPoint.x - e.clientX) / 2;
+                var lineY = Math.abs(this.beginPoint.y - e.clientY) / 2;
                 this.clear();
                 this.redrawAll();
                 this.drawEllipse(pointX, pointY, lineX, lineY, this.lineWidth, this.color);
             }
             else if (this.shape === 'arrow') {
-                this.stopPoint.setXY(e.clientX, e.clientY);
+                this.stopPoint.x = e.clientX;
+                this.stopPoint.y = e.clientY;
                 this.clear();
                 this.redrawAll();
                 this.arrowCoord(this.beginPoint, this.stopPoint, this.range);
@@ -152,15 +131,15 @@ var YMPaint = /** @class */ (function () {
     YMPaint.prototype.handleMouseUp = function (e) {
         if (this.shape === 'rect') {
             var rect = {
-                realX: this.rect.realX,
-                realY: this.rect.realY,
+                x: this.rect.x,
+                y: this.rect.y,
                 width: this.rect.width,
                 height: this.rect.height,
                 radius: this.radius,
                 color: this.color,
                 lineWidth: this.lineWidth
             };
-            this.rect = {};
+            this.rect = new Rectangle_1.default();
             this.history.rects.push(rect);
         }
         else if (this.shape === 'line') {
@@ -174,58 +153,48 @@ var YMPaint = /** @class */ (function () {
         }
         else if (this.shape === 'circle') {
             var pointX = 0, pointY = 0;
-            if (this.storage.getX() > e.clientX) {
-                pointX = this.storage.getX() - Math.abs(this.storage.getX() - e.clientX) / 2;
+            if (this.beginPoint.x > e.clientX) {
+                pointX = this.beginPoint.x - Math.abs(this.beginPoint.x - e.clientX) / 2;
             }
             else {
-                pointX = Math.abs(this.storage.getX() - e.clientX) / 2 + this.storage.getX();
+                pointX = Math.abs(this.beginPoint.x - e.clientX) / 2 + this.beginPoint.x;
             }
-            if (this.storage.getY() > e.clientY) {
-                pointY = this.storage.getY() - Math.abs(this.storage.getY() - e.clientY) / 2;
+            if (this.beginPoint.y > e.clientY) {
+                pointY = this.beginPoint.y - Math.abs(this.beginPoint.y - e.clientY) / 2;
             }
             else {
-                pointY = Math.abs(this.storage.getY() - e.clientY) / 2 + this.storage.getY();
+                pointY = Math.abs(this.beginPoint.y - e.clientY) / 2 + this.beginPoint.y;
             }
-            var lineX = Math.abs(this.storage.getX() - e.clientX) / 2;
-            var lineY = Math.abs(this.storage.getY() - e.clientY) / 2;
-            var circle = {
-                x: pointX,
-                y: pointY,
-                a: lineX,
-                b: lineY,
-                lineWidth: this.lineWidth,
-                color: this.color
-            };
+            var lineX = Math.abs(this.beginPoint.x - e.clientX) / 2;
+            var lineY = Math.abs(this.beginPoint.y - e.clientY) / 2;
+            var circle = new Circle_1.default(pointX, pointY, lineX, lineY, this.color, this.lineWidth);
             this.history.circles.push(circle);
-            this.storage = new Point();
+            this.beginPoint = new Point_1.default();
         }
         else if (this.shape === 'arrow') {
             var arrow = {
                 beginPoint: this.beginPoint,
-                stopPoint: new Point(e.clientX, e.clientY),
+                stopPoint: new Point_1.default(e.clientX, e.clientY),
                 range: this.range,
                 color: this.color
             };
             this.history.arrows.push(arrow);
-            this.beginPoint = new Point();
+            this.beginPoint = new Point_1.default();
         }
         this.drawing = false;
-    };
-    YMPaint.prototype.movePoint = function (x, y) {
-        this.points.push(new Point(x, y));
     };
     YMPaint.prototype.drawPoint = function (points, lineWidth, color) {
         for (var i = 0; i < points.length; i++) {
             this.context.beginPath();
-            if (points[i].getY() && i) {
-                this.context.moveTo(points[i - 1].getX(), points[i - 1].getY());
+            if (points[i].y && i) {
+                this.context.moveTo(points[i - 1].x, points[i - 1].y);
             }
             else {
-                this.context.moveTo(points[i].getX() - 1, points[i].getY());
+                this.context.moveTo(points[i].x - 1, points[i].y);
             }
             this.context.lineWidth = lineWidth;
             this.context.strokeStyle = color;
-            this.context.lineTo(points[i].getX(), points[i].getY());
+            this.context.lineTo(points[i].x, points[i].y);
             this.context.closePath();
             this.context.stroke();
         }
@@ -274,27 +243,27 @@ var YMPaint = /** @class */ (function () {
         this.createRect(x, y, width, height, radius, color, 'stroke', lineWidth);
     };
     YMPaint.prototype.getRadian = function (beginPoint, stopPoint) {
-        this.angle = Math.atan2(stopPoint.getY() - beginPoint.getY(), stopPoint.getX() - beginPoint.getX()) / Math.PI * 180;
+        this.angle = Math.atan2(stopPoint.y - beginPoint.y, stopPoint.x - beginPoint.x) / Math.PI * 180;
     };
     YMPaint.prototype.arrowCoord = function (beginPoint, stopPoint, range) {
-        this.polygonVertex[0] = beginPoint.getX();
-        this.polygonVertex[1] = beginPoint.getY();
-        this.polygonVertex[6] = stopPoint.getX();
-        this.polygonVertex[7] = stopPoint.getY();
+        this.polygonVertex[0] = beginPoint.x;
+        this.polygonVertex[1] = beginPoint.y;
+        this.polygonVertex[6] = stopPoint.x;
+        this.polygonVertex[7] = stopPoint.y;
         this.getRadian(beginPoint, stopPoint);
-        this.polygonVertex[8] = stopPoint.getX() - YMPaint.edgeLen * Math.cos(Math.PI / 180 * (this.angle + range));
-        this.polygonVertex[9] = stopPoint.getY() - YMPaint.edgeLen * Math.sin(Math.PI / 180 * (this.angle + range));
-        this.polygonVertex[4] = stopPoint.getX() - YMPaint.edgeLen * Math.cos(Math.PI / 180 * (this.angle - range));
-        this.polygonVertex[5] = stopPoint.getY() - YMPaint.edgeLen * Math.sin(Math.PI / 180 * (this.angle - range));
+        this.polygonVertex[8] = stopPoint.x - YMPaint.edgeLen * Math.cos(Math.PI / 180 * (this.angle + range));
+        this.polygonVertex[9] = stopPoint.y - YMPaint.edgeLen * Math.sin(Math.PI / 180 * (this.angle + range));
+        this.polygonVertex[4] = stopPoint.x - YMPaint.edgeLen * Math.cos(Math.PI / 180 * (this.angle - range));
+        this.polygonVertex[5] = stopPoint.y - YMPaint.edgeLen * Math.sin(Math.PI / 180 * (this.angle - range));
     };
     YMPaint.prototype.sideCoord = function () {
         var x = (this.polygonVertex[4] + this.polygonVertex[8]) / 2;
         var y = (this.polygonVertex[5] + this.polygonVertex[9]) / 2;
-        var midPoint = new Point(x, y);
-        this.polygonVertex[2] = (this.polygonVertex[4] + midPoint.getX()) / 2;
-        this.polygonVertex[3] = (this.polygonVertex[5] + midPoint.getY()) / 2;
-        this.polygonVertex[10] = (this.polygonVertex[8] + midPoint.getX()) / 2;
-        this.polygonVertex[11] = (this.polygonVertex[9] + midPoint.getY()) / 2;
+        var midPoint = new Point_1.default(x, y);
+        this.polygonVertex[2] = (this.polygonVertex[4] + midPoint.x) / 2;
+        this.polygonVertex[3] = (this.polygonVertex[5] + midPoint.y) / 2;
+        this.polygonVertex[10] = (this.polygonVertex[8] + midPoint.x) / 2;
+        this.polygonVertex[11] = (this.polygonVertex[9] + midPoint.y) / 2;
     };
     YMPaint.prototype.drawArrow = function (color) {
         this.context.fillStyle = color;
@@ -320,11 +289,6 @@ var YMPaint = /** @class */ (function () {
         this.canvas.addEventListener('mousemove', this.throttle(this.handleMouseMove, 10), false);
         this.canvas.addEventListener('mouseup', this.handleMouseUp.bind(this), false);
     };
-    YMPaint.prototype.resize = function () {
-        // TODO: 未来需要获取到父元素的高度
-        this.canvas.width = window.innerWidth;
-        this.canvas.height = window.innerHeight;
-    };
     /**
      * 重绘历史记录中的所有元素
      *
@@ -336,7 +300,7 @@ var YMPaint = /** @class */ (function () {
         var self = this;
         if (this.history.rects.length > 0) {
             this.history.rects.forEach(function (item) {
-                self.drawRect(item.realX, item.realY, item.width, item.height, item.radius, item.color, item.lineWidth);
+                self.drawRect(item.x, item.y, item.width, item.height, item.radius, item.color, item.lineWidth);
             });
         }
         if (this.history.lines.length > 0) {

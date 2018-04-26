@@ -121,6 +121,7 @@ export class YMPaint {
             if (this.shape === 'rect') {
                 this.rect.width = Math.abs(this.beginPoint.x - e.clientX);
                 this.rect.height = Math.abs(this.beginPoint.y - e.clientY);
+                // 确定正确的矩形左上角坐标
                 if (this.beginPoint.x > e.clientX) {
                     this.rect.x = e.clientX;
                 } else {
