@@ -22,6 +22,7 @@ interface Options {
 
 interface Listeners {
     onDrawing(data: ShapeBase): void;
+    onCursorMoving(data: any): void;
 }
 
 /**
@@ -59,6 +60,7 @@ export class YMPaint {
     private range: number;
 
     private history: ShapeBase[]
+    private record: any;
 
     constructor(config: Options, listeners: Listeners) {
         this.canvas = config.canvas;
@@ -80,6 +82,7 @@ export class YMPaint {
         this.points = [];
 
         this.history = [];
+        this.record = [];
 
         // 绑定事件
         this.bindEvent();
@@ -122,6 +125,9 @@ export class YMPaint {
      * @memberof YMPaint
      */
     private handleMouseMove(e: MouseEvent): void {
+        // 鼠标移动回调
+        this.listeners && this.listeners.onCursorMoving && this.listeners.onCursorMoving({x: e.clientX, y: e.clientY});
+
         if (this.drawing) {
             if (this.shape === ShapeType.Rectangle) {
                 this.rect.width = Math.abs(this.beginPoint.x - e.clientX);
@@ -140,6 +146,9 @@ export class YMPaint {
                 this.paint.clean();
                 this.redrawAll();
                 this.paint.drawRect(this.rect.x, this.rect.y, this.rect.width, this.rect.height, this.radius, this.color, this.lineWidth);
+
+                const rect = new Rectangle(this.rect.x, this.rect.y, this.rect.width, this.rect.height, this.radius, this.color, this.lineWidth);
+                this.record.push(rect);
             } else if (this.shape === ShapeType.Curve) {
                 this.points.push(new Point(e.clientX, e.clientY));
                 this.paint.drawPoint(this.points, this.lineWidth, this.color);
@@ -314,9 +323,13 @@ export class YMPaint {
     }
 
     public addHistory(data: any): void {
-        console.log('addHistory Success', data);
         this.history.push(data);
-        console.log('History', this.history);
+    }
+
+    public drawCursorPoint(x: number, y: number): void {
+        this.paint.clean();
+        this.redrawAll();
+        this.paint.drawFilledCircle(x, y);
     }
 
     /**

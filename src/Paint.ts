@@ -192,6 +192,21 @@ class Paint {
     public drawTriangle2(beginPoint: Point, stopPoint: Point): void {
     }
 
+    /**
+     * 绘制鼠标绘图点
+     * @param x 
+     * @param y 
+     * @param radius 
+     * @param color 
+     */
+    public drawFilledCircle(x: number, y: number, radius: number = 5, color: string = 'red'): void {
+        this.context.beginPath();
+        this.context.arc(x, y, radius, 0 * Math.PI, 2 * Math.PI, false);
+        this.context.fillStyle = color;
+        this.context.fill();
+        this.context.closePath();
+    } 
+
 
     /**
      * 清空画板

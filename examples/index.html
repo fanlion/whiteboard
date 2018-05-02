@@ -71,17 +71,28 @@
     var listeners = {
       onDrawing: function(data) {
         socket.emit('drawing', JSON.stringify(data));
+      },
+      onCursorMoving: function(data) {
+        socket.emit('cursorMoving', JSON.stringify(data));
       }
     };
 
     // 初始画笔化实例
     var paint = new YMPaintSDK.YMPaint(config, listeners);
     socket.on('drawing', handleDrawingEvent);
+    socket.on('cursorMoving', handleCursorMovingEvent);
 
+    // socket drawing事件监听
     function handleDrawingEvent(data) {
       const _data = JSON.parse(data);
       paint.addHistory(_data);
       paint.draw(_data);
+    }
+
+    // socket cursorMoving事件监听
+    function handleCursorMovingEvent(data) {
+      const _data = JSON.parse(data);
+      paint.drawCursorPoint(_data.x, _data.y);
     }
 
     // 添加监听函数
