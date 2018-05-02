@@ -259,22 +259,16 @@ export class YMPaint {
         });
     }
 
-    public draw(item: ShapeBase): void {
+    public draw(item: any): void {
         if (item.type === ShapeType.Rectangle) {
-            // @ts-ignore
             this.paint.drawRect(item.x, item.y, item.width, item.height, item.radius, item.color, item.lineWidth);
         } else if (item.type === ShapeType.Curve) {
-            // @ts-ignore
             this.paint.drawPoint(item.points, item.lineWidth, item.color);
         } else if (item.type === ShapeType.Circle) {
-            // @ts-ignore
             this.paint.drawEllipse(item.x, item.y, item.a, item.b, item.lineWidth, item.color);
         } else if (item.type === ShapeType.Arrow) {
-            console.log('浏览器绘画', item);
-            // @ts-ignore
             this.paint.drawArrow(item.beginPoint, item.stopPoint, item.color, item.range);
         } else if (item.type === ShapeType.Line) {
-            // @ts-ignore
             this.paint.drawLine(item.begin, item.end, item.color, item.lineWidth);
         }
     }
@@ -317,6 +311,12 @@ export class YMPaint {
     public cleanAll(): void {
         this.history = [];
         this.paint.clean();
+    }
+
+    public addHistory(data: any): void {
+        console.log('addHistory Success', data);
+        this.history.push(data);
+        console.log('History', this.history);
     }
 
     /**

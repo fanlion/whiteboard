@@ -10,6 +10,7 @@ app.use(express.static(path.join(__dirname, 'examples')));
 
 function onConnection(socket) {
     socket.on('drawing', data => socket.broadcast.emit('drawing', data));
+    // socket.on('drawing', data => socket.emit('drawing', data));
 }
 
 io.on('connection', onConnection);

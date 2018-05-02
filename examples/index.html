@@ -70,8 +70,7 @@
 
     var listeners = {
       onDrawing: function(data) {
-        console.log('data', data);
-        socket.emit('drawing', data);
+        socket.emit('drawing', JSON.stringify(data));
       }
     };
 
@@ -80,7 +79,9 @@
     socket.on('drawing', handleDrawingEvent);
 
     function handleDrawingEvent(data) {
-      paint.draw(data);
+      const _data = JSON.parse(data);
+      paint.addHistory(_data);
+      paint.draw(_data);
     }
 
     // 添加监听函数
